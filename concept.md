@@ -396,3 +396,178 @@ into:
 - deterministic
 
 This enables reliable UI generation across systems, and establishes a foundation for AI-native interface development.
+
+## Non-Goals (v0)
+
+SEMUI does not attempt to:
+
+- implement a full browser rendering engine
+- execute arbitrary JavaScript logic
+- support all of CSS or edge-case browser behavior
+- solve responsive design in v0
+- replace existing UI frameworks
+- guarantee identical code output across targets
+
+SEMUI is focused on:
+
+> extracting and reproducing **visual and structural intent**, not emulating the full web platform
+
+---
+
+## Execution Contract
+
+SEMUI is not just a representation format.
+It requires a defined execution mode to ensure deterministic behavior when used with LLMs.
+
+Execution mode is part of the system contract.
+
+Without it:
+
+- models introduce interpretation
+- outputs diverge
+- fidelity degrades
+
+With it:
+
+- models behave as compilers
+- outputs converge
+
+```text
+SEMUI IR
++ Execution Mode
+= Reliable UI generation
+```
+
+---
+
+## Authoring Model
+
+SEMUI is **not primarily hand-authored**.
+
+Typical usage:
+
+```text
+HTML/CSS (designed + approved)
+→ converted to SEMUI
+→ optionally refined
+→ compiled to target runtimes
+```
+
+SEMUI is:
+
+> a generated canonical layer, not the primary design surface
+
+---
+
+## Phased Development Roadmap
+
+SEMUI will be built incrementally, prioritizing validation over completeness.
+
+### v0.1 — Static Fidelity Loop
+
+- HTML/CSS → SEMUI → HTML/CSS
+- absolute positioning
+- basic layout (flex optional)
+- typography, color, borders, radius
+- no interactions or dynamic data
+
+Goal:
+
+> zero meaningful visual drift in round-trip
+
+---
+
+### v0.2 — Component & Variant Extraction
+
+- detect repeated structures
+- infer base components
+- extract variants (color/text differences)
+
+Goal:
+
+> SEMUI expresses reusable abstractions, not raw DOM
+
+---
+
+### v0.3 — Layout Semantics
+
+- explicit stack (vertical/horizontal)
+- alignment rules
+- spacing (gap vs margin)
+- container relationships
+
+Goal:
+
+> remove reliance on browser layout behavior
+
+---
+
+### v0.4 — State Representation
+
+- hover
+- active
+- selected
+- disabled
+
+Goal:
+
+> support interactive visual parity
+
+---
+
+### v0.5 — Interaction & Data (Bounded)
+
+- click → action
+- toggle state
+- open/close modal
+- simple collections (lists)
+
+Goal:
+
+> support real application surfaces without full JS execution
+
+---
+
+## First Success Metric
+
+The first proof of SEMUI is:
+
+> HTML/CSS → SEMUI → HTML/CSS reproduces the approved UI with negligible visual drift.
+
+This is the foundational invariant.
+
+All further capabilities build on this.
+
+---
+
+## Guiding Principle
+
+SEMUI is not built for completeness first.
+
+It is built for:
+
+```text
+fidelity → abstraction → capability
+```
+
+Each phase must produce usable, verifiable results before expanding scope.
+
+---
+
+## Product Direction
+
+SEMUI is valuable if it enables:
+
+```text
+approved HTML/CSS
+→ instant semantic normalization
+→ reliable cross-runtime UI generation
+```
+
+The long-term goal is not just translation.
+
+It is:
+
+> a stable, semantic interface between design, AI systems, and runtime implementations
+
+---
