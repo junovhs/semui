@@ -1,0 +1,10 @@
+# neti.toml
+[rules]
+max_file_tokens = 2000
+max_cognitive_complexity = 15
+max_function_args = 5
+ignore_tokens_on = ["*.lock", "*.md", "docs", "target", "vendor", "node_modules", "dist"]
+
+[commands]
+check = ["cargo clippy --all-targets --no-deps -- -D warnings", "cargo test"]
+fix = "cargo fmt"

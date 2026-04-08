@@ -1,0 +1,15 @@
+id = "action_row_variants"
+title = "Horizontal action row with visual variants"
+summary = "Simple row fixture for alignment and button variant fidelity."
+source_html = "source.html"
+source_css = "source.css"
+expected_semui = "expected/scene.semui.json"
+expected_roundtrip_html = "expected/roundtrip.html"
+expected_roundtrip_css = "expected/roundtrip.css"
+required_coverage = [
+  "horizontal stacking",
+  "button variants",
+  "centered labels",
+  "fixed heights",
+  "consistent radius and border treatment",
+]

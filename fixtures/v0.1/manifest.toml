@@ -1,0 +1,57 @@
+schema_version = 1
+corpus = "v0.1"
+
+[[scene]]
+id = "profile_card_absolute"
+priority = 1
+dir = "profile_card_absolute"
+source_html = "profile_card_absolute/source.html"
+source_css = "profile_card_absolute/source.css"
+expected_semui = "profile_card_absolute/expected/scene.semui.json"
+expected_roundtrip_html = "profile_card_absolute/expected/roundtrip.html"
+expected_roundtrip_css = "profile_card_absolute/expected/roundtrip.css"
+tags = ["absolute", "card", "buttons", "badge", "typography"]
+
+[[scene]]
+id = "stacked_info_card"
+priority = 2
+dir = "stacked_info_card"
+source_html = "stacked_info_card/source.html"
+source_css = "stacked_info_card/source.css"
+expected_semui = "stacked_info_card/expected/scene.semui.json"
+expected_roundtrip_html = "stacked_info_card/expected/roundtrip.html"
+expected_roundtrip_css = "stacked_info_card/expected/roundtrip.css"
+tags = ["stack", "vertical", "pill", "text", "border"]
+
+[[scene]]
+id = "action_row_variants"
+priority = 3
+dir = "action_row_variants"
+source_html = "action_row_variants/source.html"
+source_css = "action_row_variants/source.css"
+expected_semui = "action_row_variants/expected/scene.semui.json"
+expected_roundtrip_html = "action_row_variants/expected/roundtrip.html"
+expected_roundtrip_css = "action_row_variants/expected/roundtrip.css"
+tags = ["stack", "horizontal", "buttons", "variants", "alignment"]
+
+[[scene]]
+id = "nested_panel_inset"
+priority = 4
+dir = "nested_panel_inset"
+source_html = "nested_panel_inset/source.html"
+source_css = "nested_panel_inset/source.css"
+expected_semui = "nested_panel_inset/expected/scene.semui.json"
+expected_roundtrip_html = "nested_panel_inset/expected/roundtrip.html"
+expected_roundtrip_css = "nested_panel_inset/expected/roundtrip.css"
+tags = ["nested", "panel", "inset", "radius", "box-model"]
+
+[[scene]]
+id = "typography_specimen"
+priority = 5
+dir = "typography_specimen"
+source_html = "typography_specimen/source.html"
+source_css = "typography_specimen/source.css"
+expected_semui = "typography_specimen/expected/scene.semui.json"
+expected_roundtrip_html = "typography_specimen/expected/roundtrip.html"
+expected_roundtrip_css = "typography_specimen/expected/roundtrip.css"
+tags = ["typography", "text", "weights", "line-height", "colors"]

@@ -1,0 +1,16 @@
+id = "typography_specimen"
+title = "Typography specimen"
+summary = "Text-led fixture for isolated typography fidelity checks."
+source_html = "source.html"
+source_css = "source.css"
+expected_semui = "expected/scene.semui.json"
+expected_roundtrip_html = "expected/roundtrip.html"
+expected_roundtrip_css = "expected/roundtrip.css"
+required_coverage = [
+  "font family fallback",
+  "font size differences",
+  "weight differences",
+  "line-height differences",
+  "foreground color differences",
+  "width-constrained text blocks",
+]
