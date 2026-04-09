@@ -490,3 +490,87 @@ Design source
 Today, that means a disciplined Scene IR and a real static fidelity loop.
 
 Tomorrow, if that layer holds, it becomes the foundation for reusable UI semantics, cross-runtime compilation, and AI systems that can work on interfaces as explicit structure instead of guesswork.
+
+## Vision
+
+We believe UI needs its own canonical intermediate layer.
+
+Not a prettier CSS.
+Not a design tool.
+Not a framework.
+A real IR.
+
+The long-term goal of SEMUI is to become **LLVM for UI**: a stable layer between interface source and interface execution, where visual structure becomes explicit, portable, deterministic, and compilable.
+
+Today, most UI systems are still too indirect:
+
+- source describes rules, not final structure
+- layout emerges from engine behavior
+- visual truth is scattered across cascade, inheritance, defaults, and runtime interpretation
+- porting or regenerating interfaces faithfully is harder than it should be
+
+SEMUI exists to change that.
+
+The bet behind this project is simple:
+
+> UI can be normalized into a canonical intermediate representation, and the work required to build that layer is now tractable in a way it has never been before.
+
+That does not mean the problem is small.
+It means the bottleneck has changed.
+
+A huge amount of what used to make this kind of system unrealistic was not conceptual impossibility. It was the sheer volume of disciplined, repetitive, system-level work required to cover the surface area: fixtures, edge cases, normalization rules, verification harnesses, emitters, regressions, and endless iteration on bounded correctness.
+
+That work is now feasible.
+
+AI agents make it possible to do an amount of structured implementation, corpus-building, verification, and refinement that would have been dismissed as impractical only a short time ago. Used correctly, that is not a gimmick. It is an execution advantage.
+
+The moat is not the slogan.
+The moat is the accumulation.
+
+Just as infrastructure projects like FFmpeg became hard to displace because they absorbed years of ugly, exhaustive, reality-constrained work, SEMUI can become hard to displace by doing the same thing for UI normalization and compilation.
+
+The plan is not to win through hand-wavy abstraction.
+The plan is to win through:
+
+- canonicalization
+- bounded proofs
+- verification
+- coverage
+- relentless iteration
+- and an unusual willingness to do the work
+
+That is why the project starts with a narrow, disciplined milestone:
+
+```text id="je9pqe"
+HTML/CSS -> SEMUI -> HTML/CSS
+```
+
+If that loop can be made explicit, deterministic, and trustworthy, then the rest of the system has a real foundation.
+
+From there, the path opens toward:
+
+- semantic UI diffs
+- component and variant extraction
+- design system mining
+- constrained AI-native UI editing
+- cross-runtime UI compilation
+- reliable emitters for multiple platforms
+
+But none of that matters unless the base layer is real.
+
+So the philosophy of the project is straightforward:
+
+> stay focused, do not get seduced by adjacent cleverness, lock the fidelity loop, expand deliberately, and do the work.
+
+We do not need the whole future at once.
+We need a real canonical layer, proven step by step.
+
+That is the vision.
+
+Build the missing intermediate representation for interfaces.
+Make approved UI explicit.
+Make it portable.
+Make it verifiable.
+Make it compilable.
+
+Build LLVM for UI.
