@@ -1,1 +1,140 @@
-/* Reserved for the canonical emitted CSS after HTML/CSS -> SEMUI -> HTML/CSS round-trip. */
+.n0 {
+  position: absolute;
+  box-sizing: border-box;
+  top: 20px;
+  left: 24px;
+  width: 320px;
+  height: 180px;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+}
+
+.n1 {
+  position: absolute;
+  display: flex;
+  box-sizing: border-box;
+  top: 20px;
+  left: 20px;
+  width: 48px;
+  height: 48px;
+  align-items: center;
+  justify-content: center;
+  background-color: #dbeafe;
+  border-radius: 999px;
+  font-family: Inter, sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 20px;
+  color: #1d4ed8;
+}
+
+.n3 {
+  position: absolute;
+  top: 22px;
+  left: 84px;
+  width: 140px;
+  height: 20px;
+  font-family: Inter, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 20px;
+  color: #111827;
+}
+
+.n5 {
+  position: absolute;
+  top: 46px;
+  left: 84px;
+  width: 180px;
+  height: 18px;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 18px;
+  color: #6b7280;
+}
+
+.n7 {
+  position: absolute;
+  display: inline-flex;
+  box-sizing: border-box;
+  top: 88px;
+  left: 20px;
+  height: 24px;
+  padding: 0px 10px;
+  align-items: center;
+  justify-content: center;
+  background-color: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 999px;
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 12px;
+  color: #065f46;
+}
+
+.n9 {
+  position: absolute;
+  top: 126px;
+  left: 20px;
+  width: 8px;
+  height: 8px;
+  background-color: #10b981;
+  border-radius: 999px;
+}
+
+.n10 {
+  position: absolute;
+  top: 121px;
+  left: 34px;
+  width: 120px;
+  height: 18px;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 18px;
+  color: #6b7280;
+}
+
+.n12 {
+  position: absolute;
+  display: inline-flex;
+  box-sizing: border-box;
+  top: 124px;
+  left: 116px;
+  width: 88px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  background-color: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 14px;
+  color: #111827;
+}
+
+.n14 {
+  position: absolute;
+  display: inline-flex;
+  box-sizing: border-box;
+  top: 124px;
+  left: 212px;
+  width: 88px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  background-color: #111827;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 14px;
+  color: #ffffff;
+}

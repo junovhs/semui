@@ -1,6 +1,368 @@
 {
+  "schema_version": 1,
   "scene_id": "typography_specimen",
-  "status": "reserved",
-  "artifact": "semui-ir",
-  "filled_by": "IR-01 and EXT-01"
+  "corpus": "v0.1",
+  "execution_mode": "static",
+  "nodes": [
+    {
+      "id": "n0",
+      "kind": "box",
+      "layout": {
+        "position": "static",
+        "display": "block",
+        "box_sizing": "border_box",
+        "width": 360.0,
+        "margin": {
+          "top": 24.0,
+          "right": 24.0,
+          "bottom": 24.0,
+          "left": 24.0
+        },
+        "padding": {
+          "top": 20.0,
+          "right": 20.0,
+          "bottom": 20.0,
+          "left": 20.0
+        }
+      },
+      "paint": {
+        "background_color": "#ffffff",
+        "border": {
+          "width": 1.0,
+          "color": "#e2e8f0"
+        },
+        "border_radius": 16.0
+      },
+      "source": {
+        "doc_id": 0,
+        "dom_path": "0/0/1/0"
+      }
+    },
+    {
+      "id": "n1",
+      "kind": "box",
+      "parent_id": "n0",
+      "layout": {
+        "position": "static",
+        "display": "block",
+        "box_sizing": "content_box",
+        "width": 300.0,
+        "margin": {
+          "top": 0.0,
+          "right": 0.0,
+          "bottom": 12.0,
+          "left": 0.0
+        },
+        "padding": {
+          "top": 0.0,
+          "right": 0.0,
+          "bottom": 0.0,
+          "left": 0.0
+        }
+      },
+      "paint": {},
+      "typography": {
+        "font_family": [
+          "Inter",
+          "sans-serif"
+        ],
+        "font_size": 24.0,
+        "font_weight": 700,
+        "line_height": {
+          "kind": "length",
+          "value": 30.0
+        },
+        "color": "#0f172a"
+      },
+      "source": {
+        "doc_id": 0,
+        "dom_path": "0/0/1/0/0"
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "text",
+      "parent_id": "n1",
+      "text_content": "Normalization should preserve meaning and shape.",
+      "layout": {
+        "position": "static",
+        "display": "block",
+        "box_sizing": "content_box",
+        "margin": {
+          "top": 0.0,
+          "right": 0.0,
+          "bottom": 0.0,
+          "left": 0.0
+        },
+        "padding": {
+          "top": 0.0,
+          "right": 0.0,
+          "bottom": 0.0,
+          "left": 0.0
+        }
+      },
+      "paint": {},
+      "typography": {
+        "font_family": [
+          "Inter",
+          "sans-serif"
+        ],
+        "font_size": 24.0,
+        "font_weight": 700,
+        "line_height": {
+          "kind": "length",
+          "value": 30.0
+        },
+        "color": "#0f172a"
+      },
+      "source": {
+        "doc_id": 0,
+        "dom_path": "0/0/1/0/0/0"
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "box",
+      "parent_id": "n0",
+      "layout": {
+        "position": "static",
+        "display": "block",
+        "box_sizing": "content_box",
+        "width": 300.0,
+        "margin": {
+          "top": 0.0,
+          "right": 0.0,
+          "bottom": 12.0,
+          "left": 0.0
+        },
+        "padding": {
+          "top": 0.0,
+          "right": 0.0,
+          "bottom": 0.0,
+          "left": 0.0
+        }
+      },
+      "paint": {},
+      "typography": {
+        "font_family": [
+          "Inter",
+          "sans-serif"
+        ],
+        "font_size": 15.0,
+        "font_weight": 400,
+        "line_height": {
+          "kind": "length",
+          "value": 24.0
+        },
+        "color": "#334155"
+      },
+      "source": {
+        "doc_id": 0,
+        "dom_path": "0/0/1/0/1"
+      }
+    },
+    {
+      "id": "n4",
+      "kind": "text",
+      "parent_id": "n3",
+      "text_content": "The first useful proof is a round-trip that keeps the approved UI visually stable while making implicit browser behavior explicit.",
+      "layout": {
+        "position": "static",
+        "display": "block",
+        "box_sizing": "content_box",
+        "margin": {
+          "top": 0.0,
+          "right": 0.0,
+          "bottom": 0.0,
+          "left": 0.0
+        },
+        "padding": {
+          "top": 0.0,
+          "right": 0.0,
+          "bottom": 0.0,
+          "left": 0.0
+        }
+      },
+      "paint": {},
+      "typography": {
+        "font_family": [
+          "Inter",
+          "sans-serif"
+        ],
+        "font_size": 15.0,
+        "font_weight": 400,
+        "line_height": {
+          "kind": "length",
+          "value": 24.0
+        },
+        "color": "#334155"
+      },
+      "source": {
+        "doc_id": 0,
+        "dom_path": "0/0/1/0/1/0"
+      }
+    },
+    {
+      "id": "n5",
+      "kind": "box",
+      "parent_id": "n0",
+      "layout": {
+        "position": "static",
+        "display": "block",
+        "box_sizing": "content_box",
+        "margin": {
+          "top": 0.0,
+          "right": 0.0,
+          "bottom": 12.0,
+          "left": 0.0
+        },
+        "padding": {
+          "top": 0.0,
+          "right": 0.0,
+          "bottom": 0.0,
+          "left": 0.0
+        }
+      },
+      "paint": {},
+      "typography": {
+        "font_family": [
+          "Inter",
+          "sans-serif"
+        ],
+        "font_size": 12.0,
+        "font_weight": 500,
+        "line_height": {
+          "kind": "length",
+          "value": 16.0
+        },
+        "color": "#64748b"
+      },
+      "source": {
+        "doc_id": 0,
+        "dom_path": "0/0/1/0/2"
+      }
+    },
+    {
+      "id": "n6",
+      "kind": "text",
+      "parent_id": "n5",
+      "text_content": "Source of truth: approved HTML and CSS.",
+      "layout": {
+        "position": "static",
+        "display": "block",
+        "box_sizing": "content_box",
+        "margin": {
+          "top": 0.0,
+          "right": 0.0,
+          "bottom": 0.0,
+          "left": 0.0
+        },
+        "padding": {
+          "top": 0.0,
+          "right": 0.0,
+          "bottom": 0.0,
+          "left": 0.0
+        }
+      },
+      "paint": {},
+      "typography": {
+        "font_family": [
+          "Inter",
+          "sans-serif"
+        ],
+        "font_size": 12.0,
+        "font_weight": 500,
+        "line_height": {
+          "kind": "length",
+          "value": 16.0
+        },
+        "color": "#64748b"
+      },
+      "source": {
+        "doc_id": 0,
+        "dom_path": "0/0/1/0/2/0"
+      }
+    },
+    {
+      "id": "n7",
+      "kind": "box",
+      "parent_id": "n0",
+      "layout": {
+        "position": "static",
+        "display": "block",
+        "box_sizing": "content_box",
+        "margin": {
+          "top": 0.0,
+          "right": 0.0,
+          "bottom": 0.0,
+          "left": 0.0
+        },
+        "padding": {
+          "top": 0.0,
+          "right": 0.0,
+          "bottom": 0.0,
+          "left": 0.0
+        }
+      },
+      "paint": {},
+      "typography": {
+        "font_family": [
+          "Inter",
+          "sans-serif"
+        ],
+        "font_size": 13.0,
+        "font_weight": 600,
+        "line_height": {
+          "kind": "length",
+          "value": 16.0
+        },
+        "color": "#1d4ed8"
+      },
+      "source": {
+        "doc_id": 0,
+        "dom_path": "0/0/1/0/3"
+      }
+    },
+    {
+      "id": "n8",
+      "kind": "text",
+      "parent_id": "n7",
+      "text_content": "Strict compiler mode",
+      "layout": {
+        "position": "static",
+        "display": "block",
+        "box_sizing": "content_box",
+        "margin": {
+          "top": 0.0,
+          "right": 0.0,
+          "bottom": 0.0,
+          "left": 0.0
+        },
+        "padding": {
+          "top": 0.0,
+          "right": 0.0,
+          "bottom": 0.0,
+          "left": 0.0
+        }
+      },
+      "paint": {},
+      "typography": {
+        "font_family": [
+          "Inter",
+          "sans-serif"
+        ],
+        "font_size": 13.0,
+        "font_weight": 600,
+        "line_height": {
+          "kind": "length",
+          "value": 16.0
+        },
+        "color": "#1d4ed8"
+      },
+      "source": {
+        "doc_id": 0,
+        "dom_path": "0/0/1/0/3/0"
+      }
+    }
+  ]
 }

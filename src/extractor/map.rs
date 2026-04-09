@@ -134,6 +134,37 @@ fn parse_font_family(s: &str) -> Vec<String> {
     s.split(',').map(|f| f.trim().to_owned()).collect()
 }
 
+/// Zero-value [`Layout`] for text nodes, which carry no box geometry.
+pub fn to_layout_default() -> Layout {
+    Layout {
+        position: to_position("static"),
+        display: to_display("block"),
+        box_sizing: to_box_sizing("content-box"),
+        top: None,
+        left: None,
+        width: None,
+        height: None,
+        min_width: None,
+        margin: EdgeInset::zero(),
+        padding: EdgeInset::zero(),
+        flex_direction: None,
+        align_items: None,
+        justify_content: None,
+        align_self: None,
+        gap: None,
+    }
+}
+
+/// Empty [`Paint`] for text nodes (paint lives on the parent box).
+pub fn to_paint_default() -> Paint {
+    Paint {
+        background_color: None,
+        border: None,
+        border_radius: None,
+        cursor: None,
+    }
+}
+
 fn edge(sides: &[f32; 4]) -> EdgeInset {
     EdgeInset {
         top: sides[0],

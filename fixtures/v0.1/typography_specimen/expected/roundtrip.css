@@ -1,1 +1,46 @@
-/* Reserved for the canonical emitted CSS after HTML/CSS -> SEMUI -> HTML/CSS round-trip. */
+.n0 {
+  box-sizing: border-box;
+  width: 360px;
+  margin: 24px;
+  padding: 20px;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+}
+
+.n1 {
+  width: 300px;
+  margin: 0px 0px 12px 0px;
+  font-family: Inter, sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 30px;
+  color: #0f172a;
+}
+
+.n3 {
+  width: 300px;
+  margin: 0px 0px 12px 0px;
+  font-family: Inter, sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 24px;
+  color: #334155;
+}
+
+.n5 {
+  margin: 0px 0px 12px 0px;
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  color: #64748b;
+}
+
+.n7 {
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 16px;
+  color: #1d4ed8;
+}

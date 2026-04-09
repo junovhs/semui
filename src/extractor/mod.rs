@@ -19,7 +19,14 @@ use crate::source_graph::SceneSourceGraph;
 
 /// Tags that are invisible structural boilerplate — skipped entirely along
 /// with all of their descendants.
-const INVISIBLE_TAGS: &[&str] = &["html", "head", "meta", "link", "title", "style", "script"];
+const INVISIBLE_TAGS: &[&str] = &["head", "meta", "link", "title", "style", "script"];
+
+/// Tags that are transparent wrappers: we traverse their children but do not
+/// emit an [`IrNode`] for the element itself. A transparent element's children
+/// inherit their parent IR id from the transparent element's own parent.
+/// This ensures `<html>` and `<body>` vanish from the IR so that re-parsing
+/// the emitted HTML (which always has those wrappers) produces the same IR.
+const TRANSPARENT_TAGS: &[&str] = &["html", "body"];
 
 #[derive(Debug)]
 pub enum ExtractorError {
@@ -70,11 +77,11 @@ pub fn extract_ir(
 
     for html_node in &graph.html_nodes {
         // Propagate skip to descendants.
-        if let Some(pid) = html_node.parent_id {
-            if skipped_ids.contains(&pid) {
-                skipped_ids.insert(html_node.id);
-                continue;
-            }
+        if let Some(pid) = html_node.parent_id
+            && skipped_ids.contains(&pid)
+        {
+            skipped_ids.insert(html_node.id);
+            continue;
         }
 
         match html_node.kind {
@@ -84,6 +91,18 @@ pub fn extract_ir(
                 let tag = html_node.name.as_deref().unwrap_or("");
                 if INVISIBLE_TAGS.contains(&tag) {
                     skipped_ids.insert(html_node.id);
+                    continue;
+                }
+
+                // Transparent: pass the parent's IR id through to children.
+                if TRANSPARENT_TAGS.contains(&tag) {
+                    if let Some(pir) = html_node
+                        .parent_id
+                        .and_then(|pid| html_to_ir_id.get(&pid))
+                        .cloned()
+                    {
+                        html_to_ir_id.insert(html_node.id, pir);
+                    }
                     continue;
                 }
 

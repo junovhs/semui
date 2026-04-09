@@ -1,6 +1,379 @@
 {
+  "schema_version": 1,
   "scene_id": "stacked_info_card",
-  "status": "reserved",
-  "artifact": "semui-ir",
-  "filled_by": "IR-01 and EXT-01"
+  "corpus": "v0.1",
+  "execution_mode": "static",
+  "nodes": [
+    {
+      "id": "n0",
+      "kind": "box",
+      "layout": {
+        "position": "static",
+        "display": "flex",
+        "box_sizing": "border_box",
+        "width": 320.0,
+        "margin": {
+          "top": 24.0,
+          "right": 24.0,
+          "bottom": 24.0,
+          "left": 24.0
+        },
+        "padding": {
+          "top": 20.0,
+          "right": 20.0,
+          "bottom": 20.0,
+          "left": 20.0
+        },
+        "flex_direction": "column",
+        "gap": 12.0
+      },
+      "paint": {
+        "background_color": "#ffffff",
+        "border": {
+          "width": 1.0,
+          "color": "#dbe3ec"
+        },
+        "border_radius": 16.0
+      },
+      "source": {
+        "doc_id": 0,
+        "dom_path": "0/0/1/0"
+      }
+    },
+    {
+      "id": "n1",
+      "kind": "box",
+      "parent_id": "n0",
+      "layout": {
+        "position": "static",
+        "display": "inline_flex",
+        "box_sizing": "border_box",
+        "height": 24.0,
+        "margin": {
+          "top": 0.0,
+          "right": 0.0,
+          "bottom": 0.0,
+          "left": 0.0
+        },
+        "padding": {
+          "top": 0.0,
+          "right": 10.0,
+          "bottom": 0.0,
+          "left": 10.0
+        },
+        "align_items": "center",
+        "justify_content": "center",
+        "align_self": "flex_start"
+      },
+      "paint": {
+        "background_color": "#eef2ff",
+        "border": {
+          "width": 1.0,
+          "color": "#c7d2fe"
+        },
+        "border_radius": 999.0
+      },
+      "typography": {
+        "font_family": [
+          "Inter",
+          "sans-serif"
+        ],
+        "font_size": 12.0,
+        "font_weight": 600,
+        "line_height": {
+          "kind": "length",
+          "value": 12.0
+        },
+        "color": "#4338ca"
+      },
+      "source": {
+        "doc_id": 0,
+        "dom_path": "0/0/1/0/0"
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "text",
+      "parent_id": "n1",
+      "text_content": "System",
+      "layout": {
+        "position": "static",
+        "display": "block",
+        "box_sizing": "content_box",
+        "margin": {
+          "top": 0.0,
+          "right": 0.0,
+          "bottom": 0.0,
+          "left": 0.0
+        },
+        "padding": {
+          "top": 0.0,
+          "right": 0.0,
+          "bottom": 0.0,
+          "left": 0.0
+        }
+      },
+      "paint": {},
+      "typography": {
+        "font_family": [
+          "Inter",
+          "sans-serif"
+        ],
+        "font_size": 12.0,
+        "font_weight": 600,
+        "line_height": {
+          "kind": "length",
+          "value": 12.0
+        },
+        "color": "#4338ca"
+      },
+      "source": {
+        "doc_id": 0,
+        "dom_path": "0/0/1/0/0/0"
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "box",
+      "parent_id": "n0",
+      "layout": {
+        "position": "static",
+        "display": "block",
+        "box_sizing": "content_box",
+        "margin": {
+          "top": 0.0,
+          "right": 0.0,
+          "bottom": 0.0,
+          "left": 0.0
+        },
+        "padding": {
+          "top": 0.0,
+          "right": 0.0,
+          "bottom": 0.0,
+          "left": 0.0
+        }
+      },
+      "paint": {},
+      "typography": {
+        "font_family": [
+          "Inter",
+          "sans-serif"
+        ],
+        "font_size": 20.0,
+        "font_weight": 600,
+        "line_height": {
+          "kind": "length",
+          "value": 24.0
+        },
+        "color": "#0f172a"
+      },
+      "source": {
+        "doc_id": 0,
+        "dom_path": "0/0/1/0/1"
+      }
+    },
+    {
+      "id": "n4",
+      "kind": "text",
+      "parent_id": "n3",
+      "text_content": "Weekly rollout is on track",
+      "layout": {
+        "position": "static",
+        "display": "block",
+        "box_sizing": "content_box",
+        "margin": {
+          "top": 0.0,
+          "right": 0.0,
+          "bottom": 0.0,
+          "left": 0.0
+        },
+        "padding": {
+          "top": 0.0,
+          "right": 0.0,
+          "bottom": 0.0,
+          "left": 0.0
+        }
+      },
+      "paint": {},
+      "typography": {
+        "font_family": [
+          "Inter",
+          "sans-serif"
+        ],
+        "font_size": 20.0,
+        "font_weight": 600,
+        "line_height": {
+          "kind": "length",
+          "value": 24.0
+        },
+        "color": "#0f172a"
+      },
+      "source": {
+        "doc_id": 0,
+        "dom_path": "0/0/1/0/1/0"
+      }
+    },
+    {
+      "id": "n5",
+      "kind": "box",
+      "parent_id": "n0",
+      "layout": {
+        "position": "static",
+        "display": "block",
+        "box_sizing": "content_box",
+        "margin": {
+          "top": 0.0,
+          "right": 0.0,
+          "bottom": 0.0,
+          "left": 0.0
+        },
+        "padding": {
+          "top": 0.0,
+          "right": 0.0,
+          "bottom": 0.0,
+          "left": 0.0
+        }
+      },
+      "paint": {},
+      "typography": {
+        "font_family": [
+          "Inter",
+          "sans-serif"
+        ],
+        "font_size": 14.0,
+        "font_weight": 400,
+        "line_height": {
+          "kind": "length",
+          "value": 22.0
+        },
+        "color": "#475569"
+      },
+      "source": {
+        "doc_id": 0,
+        "dom_path": "0/0/1/0/2"
+      }
+    },
+    {
+      "id": "n6",
+      "kind": "text",
+      "parent_id": "n5",
+      "text_content": "Six core checks completed with no visual regressions in the approved surfaces.",
+      "layout": {
+        "position": "static",
+        "display": "block",
+        "box_sizing": "content_box",
+        "margin": {
+          "top": 0.0,
+          "right": 0.0,
+          "bottom": 0.0,
+          "left": 0.0
+        },
+        "padding": {
+          "top": 0.0,
+          "right": 0.0,
+          "bottom": 0.0,
+          "left": 0.0
+        }
+      },
+      "paint": {},
+      "typography": {
+        "font_family": [
+          "Inter",
+          "sans-serif"
+        ],
+        "font_size": 14.0,
+        "font_weight": 400,
+        "line_height": {
+          "kind": "length",
+          "value": 22.0
+        },
+        "color": "#475569"
+      },
+      "source": {
+        "doc_id": 0,
+        "dom_path": "0/0/1/0/2/0"
+      }
+    },
+    {
+      "id": "n7",
+      "kind": "box",
+      "parent_id": "n0",
+      "layout": {
+        "position": "static",
+        "display": "block",
+        "box_sizing": "content_box",
+        "margin": {
+          "top": 0.0,
+          "right": 0.0,
+          "bottom": 0.0,
+          "left": 0.0
+        },
+        "padding": {
+          "top": 0.0,
+          "right": 0.0,
+          "bottom": 0.0,
+          "left": 0.0
+        }
+      },
+      "paint": {},
+      "typography": {
+        "font_family": [
+          "Inter",
+          "sans-serif"
+        ],
+        "font_size": 12.0,
+        "font_weight": 500,
+        "line_height": {
+          "kind": "length",
+          "value": 16.0
+        },
+        "color": "#64748b"
+      },
+      "source": {
+        "doc_id": 0,
+        "dom_path": "0/0/1/0/3"
+      }
+    },
+    {
+      "id": "n8",
+      "kind": "text",
+      "parent_id": "n7",
+      "text_content": "Updated 12 minutes ago",
+      "layout": {
+        "position": "static",
+        "display": "block",
+        "box_sizing": "content_box",
+        "margin": {
+          "top": 0.0,
+          "right": 0.0,
+          "bottom": 0.0,
+          "left": 0.0
+        },
+        "padding": {
+          "top": 0.0,
+          "right": 0.0,
+          "bottom": 0.0,
+          "left": 0.0
+        }
+      },
+      "paint": {},
+      "typography": {
+        "font_family": [
+          "Inter",
+          "sans-serif"
+        ],
+        "font_size": 12.0,
+        "font_weight": 500,
+        "line_height": {
+          "kind": "length",
+          "value": 16.0
+        },
+        "color": "#64748b"
+      },
+      "source": {
+        "doc_id": 0,
+        "dom_path": "0/0/1/0/3/0"
+      }
+    }
+  ]
 }

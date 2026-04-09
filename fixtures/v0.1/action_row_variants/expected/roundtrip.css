@@ -1,1 +1,64 @@
-/* Reserved for the canonical emitted CSS after HTML/CSS -> SEMUI -> HTML/CSS round-trip. */
+.n0 {
+  display: inline-flex;
+  box-sizing: border-box;
+  margin: 24px;
+  padding: 16px;
+  align-items: center;
+  gap: 12px;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+}
+
+.n1 {
+  display: inline-flex;
+  box-sizing: border-box;
+  height: 36px;
+  min-width: 92px;
+  padding: 0px 14px;
+  align-items: center;
+  justify-content: center;
+  background-color: #0f172a;
+  border-radius: 10px;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 14px;
+  color: #ffffff;
+}
+
+.n3 {
+  display: inline-flex;
+  box-sizing: border-box;
+  height: 36px;
+  min-width: 92px;
+  padding: 0px 14px;
+  align-items: center;
+  justify-content: center;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 14px;
+  color: #0f172a;
+}
+
+.n5 {
+  display: inline-flex;
+  box-sizing: border-box;
+  height: 36px;
+  min-width: 92px;
+  padding: 0px 14px;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 14px;
+  color: #475569;
+}

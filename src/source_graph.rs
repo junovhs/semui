@@ -27,6 +27,28 @@ pub fn load_scene_source_graph(
 }
 
 impl SceneSourceGraph {
+    /// Build a [`SceneSourceGraph`] directly from HTML and CSS strings without
+    /// touching the file system. Intended for testing and round-trip verification.
+    pub fn from_strings(
+        scene_id: &str,
+        html_str: &str,
+        css_str: &str,
+    ) -> Result<Self, SourceGraphError> {
+        use std::path::PathBuf;
+        let html = SourceDocument::new_html(0, PathBuf::from("<emitted-html>"), html_str.to_owned());
+        let css = SourceDocument::new_css(1, PathBuf::from("<emitted-css>"), css_str.to_owned());
+        let html_nodes = parse_html_document(html.id, &html.contents)?;
+        let css_rules = parse_css_document(css.id, &css.contents)?;
+        Ok(Self {
+            scene_id: scene_id.to_owned(),
+            scene_root: PathBuf::from("."),
+            html,
+            css,
+            html_nodes,
+            css_rules,
+        })
+    }
+
     pub fn load(scene: FixtureSceneEntry) -> Result<Self, SourceGraphError> {
         let html_path = scene.manifest_root.join(&scene.scene.source_html);
         let css_path = scene.manifest_root.join(&scene.scene.source_css);
