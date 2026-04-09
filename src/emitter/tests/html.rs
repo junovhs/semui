@@ -131,8 +131,10 @@ fn text_node_content_appears_inside_parent() {
     let html = build_html(&minimal_scene(vec![parent, text]));
     assert!(html.contains("Hello World"), "html={html}");
     // Text must be inside the parent div
-    let div_pos = html.find("<div class=\"n0\">").expect("div not found");
-    let text_pos = html.find("Hello World").expect("text not found");
+    let div_pos  = html.find("<div class=\"n0\">");
+    let text_pos = html.find("Hello World");
+    assert!(div_pos.is_some(),  "div not found in html={html}");
+    assert!(text_pos.is_some(), "text not found in html={html}");
     assert!(text_pos > div_pos, "text must come after opening div tag");
 }
 
@@ -193,7 +195,9 @@ fn child_element_nested_inside_parent() {
         source: source_ref(),
     };
     let html = build_html(&minimal_scene(vec![parent, child]));
-    let outer = html.find("<div class=\"n0\">").expect("outer not found");
-    let inner = html.find("<div class=\"n1\">").expect("inner not found");
+    let outer = html.find("<div class=\"n0\">");
+    let inner = html.find("<div class=\"n1\">");
+    assert!(outer.is_some(), "outer div not found in html={html}");
+    assert!(inner.is_some(), "inner div not found in html={html}");
     assert!(inner > outer, "child must appear after parent opening tag");
 }

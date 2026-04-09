@@ -40,11 +40,11 @@ fn all_v01_scenes_pass_round_trip() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Corpus must cover all 5 scenes defined in the manifest.
+/// Corpus must cover all 6 scenes defined in the manifest.
 #[test]
 fn corpus_proof_covers_all_five_scenes() -> Result<(), Box<dyn std::error::Error>> {
     let proof = run_corpus_proof(repo_root())?;
-    assert_eq!(proof.scenes.len(), 5, "expected 5 scenes in the v0.1 corpus");
+    assert_eq!(proof.scenes.len(), 6, "expected 6 scenes in the v0.1 corpus");
     Ok(())
 }
 
@@ -69,6 +69,7 @@ fn golden_semui_json_is_deserializable_for_all_scenes() -> Result<(), Box<dyn st
         "action_row_variants",
         "nested_panel_inset",
         "typography_specimen",
+        "update_toast",
     ];
     for scene_id in scene_ids {
         let ir = write_golden_artifacts(repo_root(), scene_id)?;

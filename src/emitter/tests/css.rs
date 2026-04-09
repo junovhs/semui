@@ -6,7 +6,7 @@ use crate::ir::layout::{
 };
 use crate::ir::paint::{Border, Color, Paint};
 use crate::ir::typography::{LineHeight, Typography};
-use crate::ir::{IrNode, NodeKind, SourceRef};
+use crate::ir::{ControlKind, IrNode, NodeKind, SourceRef};
 
 fn default_layout() -> Layout {
     Layout {
@@ -36,6 +36,20 @@ fn source_ref() -> SourceRef {
     SourceRef { doc_id: 0, dom_path: "0/1".to_owned(), span: None }
 }
 
+fn control_node(id: &str) -> IrNode {
+    IrNode {
+        id: id.to_owned(),
+        kind: NodeKind::Control,
+        parent_id: None,
+        control_kind: Some(ControlKind::Button),
+        text_content: None,
+        layout: default_layout(),
+        paint: default_paint(),
+        typography: None,
+        source: source_ref(),
+    }
+}
+
 fn box_node(id: &str, layout: Layout, paint: Paint) -> IrNode {
     IrNode {
         id: id.to_owned(),
@@ -48,6 +62,31 @@ fn box_node(id: &str, layout: Layout, paint: Paint) -> IrNode {
         typography: None,
         source: source_ref(),
     }
+}
+
+// --- appearance reset ---
+
+#[test]
+fn button_control_emits_appearance_none() {
+    let css = build_css(&[control_node("n0")]);
+    assert!(css.contains("appearance: none"), "css={css}");
+}
+
+#[test]
+fn button_appearance_none_precedes_other_decls() {
+    let mut node = control_node("n0");
+    node.paint.background_color = Some(Color("#2563eb".to_owned()));
+    let css = build_css(&[node]);
+    let app = css.find("appearance: none");
+    let bg  = css.find("background-color");
+    assert!(app.is_some() && app < bg, "appearance: none must precede background-color: {css}");
+}
+
+#[test]
+fn box_node_does_not_emit_appearance_none() {
+    let layout = Layout { width: Some(100.0), ..default_layout() };
+    let css = build_css(&[box_node("n0", layout, default_paint())]);
+    assert!(!css.contains("appearance"), "css={css}");
 }
 
 // --- px() helper ---

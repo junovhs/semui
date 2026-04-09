@@ -1,0 +1,54 @@
+.toast-card {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 320px;
+    height: 140px;
+    padding: 24px;
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+}
+.toast-title {
+    margin: 0px;
+    font-family: Inter, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+    color: #111827;
+}
+.toast-body {
+    margin: 0px;
+    font-family: Inter, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+    color: #6b7280;
+}
+.toast-btn {
+    box-sizing: border-box;
+    appearance: none;
+    cursor: pointer;
+    width: 120px;
+    height: 36px;
+    background-color: #2563eb;
+    color: #ffffff;
+    border: 0;
+    border-radius: 6px;
+    font-family: Inter, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 36px;
+}
+.toast-badge {
+    box-sizing: border-box;
+    position: absolute;
+    top: -6px;
+    left: 310px;
+    width: 16px;
+    height: 16px;
+    background-color: #ef4444;
+    border: 2px solid #ffffff;
+    border-radius: 8px;
+}

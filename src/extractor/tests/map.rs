@@ -75,9 +75,9 @@ fn to_paint_border_emitted_when_width_nonzero() {
         ..ComputedStyle::default()
     };
     let paint = map::to_paint(&style);
-    let border = paint.border.expect("border should be Some");
-    assert_eq!(border.width, 2.0);
-    assert_eq!(border.color.0, "#ff0000");
+    assert!(paint.border.is_some(), "border should be Some when width > 0");
+    assert_eq!(paint.border.as_ref().map(|b| b.width),        Some(2.0));
+    assert_eq!(paint.border.as_ref().map(|b| b.color.0.as_str()), Some("#ff0000"));
 }
 
 #[test]
@@ -130,8 +130,9 @@ fn to_typography_line_height_normal_by_default() {
         line_height: None,
         ..ComputedStyle::default()
     };
-    let typo = map::to_typography(&style).expect("should resolve");
-    assert_eq!(typo.line_height, TLineHeight::Normal);
+    let typo = map::to_typography(&style);
+    assert!(typo.is_some(), "typography should resolve");
+    assert_eq!(typo.map(|t| t.line_height), Some(TLineHeight::Normal));
 }
 
 #[test]
@@ -144,8 +145,9 @@ fn to_typography_line_height_px_parsed() {
         line_height: Some("24px".to_owned()),
         ..ComputedStyle::default()
     };
-    let typo = map::to_typography(&style).expect("should resolve");
-    assert_eq!(typo.line_height, TLineHeight::Length { value: 24.0 });
+    let typo = map::to_typography(&style);
+    assert!(typo.is_some(), "typography should resolve");
+    assert_eq!(typo.map(|t| t.line_height), Some(TLineHeight::Length { value: 24.0 }));
 }
 
 #[test]
@@ -157,6 +159,7 @@ fn to_typography_font_family_split_on_comma() {
         color: Some("#000".to_owned()),
         ..ComputedStyle::default()
     };
-    let typo = map::to_typography(&style).expect("should resolve");
-    assert_eq!(typo.font_family, vec!["Inter", "sans-serif"]);
+    let typo = map::to_typography(&style);
+    assert!(typo.is_some(), "typography should resolve");
+    assert_eq!(typo.map(|t| t.font_family), Some(vec!["Inter".to_owned(), "sans-serif".to_owned()]));
 }

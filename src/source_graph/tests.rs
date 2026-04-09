@@ -12,7 +12,7 @@ fn loads_fixture_manifest() {
     let manifest = FixtureManifest::load(manifest_path).expect("manifest should load");
 
     assert_eq!(manifest.corpus, "v0.1");
-    assert_eq!(manifest.scenes.len(), 5);
+    assert_eq!(manifest.scenes.len(), 6);
     assert!(manifest
         .scenes
         .iter()

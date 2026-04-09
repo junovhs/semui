@@ -99,6 +99,7 @@
 }
 
 .n12 {
+  appearance: none;
   position: absolute;
   display: inline-flex;
   box-sizing: border-box;
@@ -120,6 +121,7 @@
 }
 
 .n14 {
+  appearance: none;
   position: absolute;
   display: inline-flex;
   box-sizing: border-box;

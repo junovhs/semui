@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cargo test:*)",
+      "Bash(ishoo list:*)",
+      "Bash(ishoo help:*)",
+      "Bash(ishoo new:*)",
+      "Bash(ishoo edit EMIT-02 --description 'Discovered via visual inspection in demo.html \\(update_toast fixture, Before vs After toggle\\).:*)",
+      "Bash(ishoo start:*)",
+      "Bash(semmap trace:*)",
+      "Bash(semmap generate:*)",
+      "Bash(neti check:*)",
+      "Bash(cargo clippy:*)",
+      "Bash(ishoo edit:*)",
+      "Bash(ishoo finish:*)",
+      "Bash(ishoo land:*)",
+      "Bash(grep appearance:*)",
+      "Bash(powershell -Command \"\\(Get-Content demo.html\\).Count\")",
+      "Bash(dir \"C:\\\\Users\\\\SpencerNunamakerTrav\\\\semui\\\\*.html\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d, indent=2\\)\\)\")",
+      "Bash(grep -c \"        ir: \\\\`\" \"/c/Users/SpencerNunamakerTrav/semui/index.html\")",
+      "Bash(grep -c \"        note: \\\\`\" \"/c/Users/SpencerNunamakerTrav/semui/index.html\")"
+    ]
+  }
+}

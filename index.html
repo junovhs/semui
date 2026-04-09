@@ -1,0 +1,1502 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>SEMUI Fixture Demo</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0d0d0d;
+      color: #e0e0e0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
+    #header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 20px;
+      height: 46px;
+      background: #151515;
+      border-bottom: 1px solid #252525;
+      flex-shrink: 0;
+    }
+    #header .logo {
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    #header .sep { width: 1px; height: 14px; background: #333; }
+    #header .sub { font-size: 11px; color: #666; }
+    .spacer { flex: 1; }
+    #version-picker {
+      appearance: none;
+      -webkit-appearance: none;
+      background: #222 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23777'/%3E%3C/svg%3E") no-repeat right 9px center;
+      border: 1px solid #333;
+      color: #ddd;
+      padding: 4px 28px 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    /* ── Explainer ── */
+    #explainer {
+      padding: 10px 20px;
+      background: #0d1117;
+      border-bottom: 1px solid #1e1e1e;
+      font-size: 12px;
+      color: #8b949e;
+      line-height: 1.6;
+      flex-shrink: 0;
+    }
+    #explainer strong { color: #c9d1d9; }
+    #explainer em { color: #a5d6ff; font-style: normal; }
+    #explainer-why { display: block; margin-top: 5px; color: #6e7681; }
+    #explainer-why em { color: #7ee787; }
+
+    /* ── Scene note ── */
+    #scene-note {
+      padding: 8px 20px;
+      background: #0a0f14;
+      border-bottom: 1px solid #1e1e1e;
+      font-size: 11.5px;
+      color: #6e7681;
+      line-height: 1.55;
+      flex-shrink: 0;
+      min-height: 0;
+    }
+    #scene-note:empty { display: none; }
+    #scene-note strong { color: #8b949e; font-weight: 600; }
+    #scene-note code { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #79c0ff; background: #161b22; padding: 1px 4px; border-radius: 3px; }
+
+    /* ── Scene tabs ── */
+    #scene-tabs {
+      display: flex;
+      gap: 4px;
+      padding: 8px 20px;
+      background: #111;
+      border-bottom: 1px solid #1e1e1e;
+      flex-shrink: 0;
+      overflow-x: auto;
+    }
+    #scene-tabs::-webkit-scrollbar { height: 0; }
+    .scene-tab {
+      padding: 5px 13px;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      font-size: 12px;
+      cursor: pointer;
+      background: transparent;
+      color: #666;
+      white-space: nowrap;
+      transition: color 0.1s, background 0.1s;
+    }
+    .scene-tab:hover { color: #bbb; background: #1e1e1e; }
+    .scene-tab.active { background: #222; border-color: #333; color: #fff; font-weight: 500; }
+
+    /* ── Controls ── */
+    #controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 20px;
+      background: #111;
+      border-bottom: 1px solid #1e1e1e;
+      flex-shrink: 0;
+    }
+    .toggle-group {
+      display: flex;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 8px;
+      padding: 2px;
+      gap: 2px;
+    }
+    .toggle-btn {
+      padding: 5px 18px;
+      border-radius: 6px;
+      border: none;
+      font-size: 12px;
+      cursor: pointer;
+      background: transparent;
+      color: #777;
+      transition: all 0.1s;
+      font-family: inherit;
+    }
+    .toggle-btn:hover { color: #bbb; }
+    .toggle-btn.active { background: #fff; color: #000; font-weight: 600; }
+    #mode-desc { font-size: 11px; color: #444; }
+
+    /* ── Main split ── */
+    #main {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* ── Preview pane ── */
+    #preview-pane {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #1e1e1e;
+      min-width: 0;
+    }
+    .pane-label {
+      padding: 6px 16px;
+      font-size: 10px;
+      font-weight: 700;
+      color: #444;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      background: #0e0e0e;
+      border-bottom: 1px solid #1e1e1e;
+      flex-shrink: 0;
+    }
+    #preview-frame {
+      flex: 1;
+      border: none;
+      width: 100%;
+      background: #fff;
+    }
+
+    /* ── Code pane ── */
+    #code-pane {
+      width: 50%;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    #code-tab-bar {
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      background: #151515;
+      border-bottom: 1px solid #1e1e1e;
+      flex-shrink: 0;
+      gap: 0;
+    }
+    .code-tab {
+      padding: 9px 14px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: #444;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: color 0.1s, border-color 0.1s;
+      font-family: inherit;
+    }
+    .code-tab:hover { color: #999; }
+    .code-tab.active { color: #ddd; border-bottom-color: #4a9eff; }
+    .code-tab-spacer { flex: 1; }
+    #line-count { font-size: 10px; color: #333; padding-right: 4px; }
+
+    #code-scroll {
+      flex: 1;
+      overflow: auto;
+      background: #282c34;
+    }
+    #code-scroll pre {
+      margin: 0;
+      padding: 20px 24px;
+      font-size: 12.5px;
+      line-height: 1.65;
+    }
+    #code-scroll pre code.hljs {
+      background: transparent;
+      padding: 0;
+      font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'SF Mono', Menlo, monospace;
+    }
+  </style>
+</head>
+<body>
+
+<div id="header">
+  <span class="logo">SEMUI</span>
+  <div class="sep"></div>
+  <span class="sub">Fixture Demo</span>
+  <div class="spacer"></div>
+  <select id="version-picker"></select>
+</div>
+
+<div id="explainer">
+  <strong>What you're seeing:</strong> SEMUI is a Rust library that ingests HTML&nbsp;+&nbsp;CSS
+  and converts it into a clean, normalized Intermediate Representation (IR) — capturing layout,
+  paint, and typography explicitly for every node. The IR is then emitted back as HTML&nbsp;+&nbsp;CSS.
+  <em>Before</em> is the hand-authored source; <em>After</em> is what the emitter produces from the
+  IR alone, with zero structural drift between the two passes.
+  <span id="explainer-why">
+    Right now SEMUI proves the invariant: round-trip fidelity in HTML. But HTML&nbsp;→&nbsp;HTML is
+    just the proof of concept — the IR itself is the point. Once we can extract a reliable,
+    renderer-agnostic description of what a UI actually <em>is</em> — resolved coordinates,
+    explicit typography, semantic node kinds — we can compile it to
+    <em>anything</em>: SwiftUI, WGPU, Egui, Dioxus, Jetpack Compose. You design in HTML
+    because AI understands it best. SEMUI is the layer where that design becomes law.
+    Emitters execute the law on any runtime.
+  </span>
+</div>
+
+<div id="scene-tabs"></div>
+
+<div id="controls">
+  <div class="toggle-group">
+    <button class="toggle-btn active" id="btn-before" onclick="setMode('before')">Before</button>
+    <button class="toggle-btn"        id="btn-after"  onclick="setMode('after')">After</button>
+  </div>
+  <span id="mode-desc"></span>
+</div>
+
+<div id="scene-note"></div>
+
+<div id="main">
+  <div id="preview-pane">
+    <div class="pane-label">Rendered</div>
+    <iframe id="preview-frame" sandbox="allow-same-origin"></iframe>
+  </div>
+  <div id="code-pane">
+    <div id="code-tab-bar">
+      <button class="code-tab active" id="tab-html" onclick="setCodeTab('html')">HTML</button>
+      <button class="code-tab"        id="tab-css"  onclick="setCodeTab('css')">CSS</button>
+      <button class="code-tab"        id="tab-ir"   onclick="setCodeTab('ir')">IR</button>
+      <div class="code-tab-spacer"></div>
+      <span id="line-count"></span>
+    </div>
+    <div id="code-scroll">
+      <pre><code id="code-display"></code></pre>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// FIXTURE DATA
+// Each scene has before {html, css} and after {html, css}.
+// html = body content only; css = full stylesheet.
+// ─────────────────────────────────────────────────────────────────────────────
+const DATA = {
+  "v0.1": {
+    scenes: [
+      {
+        id: "profile_card_absolute",
+        label: "Profile Card",
+        note: `<strong>Absolute positioning.</strong> 11 nodes, each with explicit <code>left</code>, <code>top</code>, <code>width</code>, <code>height</code> coordinates. The key test: do CSS coordinates survive extraction and re-emission without any rounding loss? Also exercises two button variants with distinct paint — the <code>appearance: none</code> fix ensures native OS button chrome (gradient, inset border, baseline shift) is stripped so After matches Before visually.`,
+        ir: `{
+  "schema_version": 1,
+  "scene_id": "profile_card_absolute",
+  "corpus": "v0.1",
+  "execution_mode": "static",
+  "nodes": [
+    { "id": "n0", "kind": "box", "layout": { "position": "absolute", "display": "block", "box_sizing": "border_box", "top": 20.0, "left": 24.0, "width": 320.0, "height": 180.0, "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": { "background_color": "#ffffff", "border": { "width": 1.0, "color": "#e5e7eb" }, "border_radius": 16.0 }, "source": { "doc_id": 0, "dom_path": "0/0/1/0" } },
+    { "id": "n1", "kind": "box", "parent_id": "n0", "layout": { "position": "absolute", "display": "flex", "box_sizing": "border_box", "top": 20.0, "left": 20.0, "width": 48.0, "height": 48.0, "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "align_items": "center", "justify_content": "center" }, "paint": { "background_color": "#dbeafe", "border_radius": 999.0 }, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 20.0, "font_weight": 700, "line_height": { "kind": "length", "value": 20.0 }, "color": "#1d4ed8" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/0" } },
+    { "id": "n2", "kind": "text", "parent_id": "n1", "text_content": "A", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 20.0, "font_weight": 700, "line_height": { "kind": "length", "value": 20.0 }, "color": "#1d4ed8" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/0/0" } },
+    { "id": "n3", "kind": "box", "parent_id": "n0", "layout": { "position": "absolute", "display": "block", "box_sizing": "content_box", "top": 22.0, "left": 84.0, "width": 140.0, "height": 20.0, "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 16.0, "font_weight": 600, "line_height": { "kind": "length", "value": 20.0 }, "color": "#111827" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/1" } },
+    { "id": "n4", "kind": "text", "parent_id": "n3", "text_content": "Ava Martinez", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 16.0, "font_weight": 600, "line_height": { "kind": "length", "value": 20.0 }, "color": "#111827" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/1/0" } },
+    { "id": "n5", "kind": "box", "parent_id": "n0", "layout": { "position": "absolute", "display": "block", "box_sizing": "content_box", "top": 46.0, "left": 84.0, "width": 180.0, "height": 18.0, "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 13.0, "font_weight": 400, "line_height": { "kind": "length", "value": 18.0 }, "color": "#6b7280" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/2" } },
+    { "id": "n6", "kind": "text", "parent_id": "n5", "text_content": "ava@northstar.dev", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 13.0, "font_weight": 400, "line_height": { "kind": "length", "value": 18.0 }, "color": "#6b7280" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/2/0" } },
+    { "id": "n7", "kind": "box", "parent_id": "n0", "layout": { "position": "absolute", "display": "inline_flex", "box_sizing": "border_box", "top": 88.0, "left": 20.0, "height": 24.0, "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 10.0, "bottom": 0.0, "left": 10.0 }, "align_items": "center", "justify_content": "center" }, "paint": { "background_color": "#ecfdf5", "border": { "width": 1.0, "color": "#a7f3d0" }, "border_radius": 999.0 }, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 12.0, "font_weight": 600, "line_height": { "kind": "length", "value": 12.0 }, "color": "#065f46" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/3" } },
+    { "id": "n8", "kind": "text", "parent_id": "n7", "text_content": "Active", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 12.0, "font_weight": 600, "line_height": { "kind": "length", "value": 12.0 }, "color": "#065f46" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/3/0" } },
+    { "id": "n9", "kind": "box", "parent_id": "n0", "layout": { "position": "absolute", "display": "block", "box_sizing": "content_box", "top": 126.0, "left": 20.0, "width": 8.0, "height": 8.0, "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": { "background_color": "#10b981", "border_radius": 999.0 }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/4" } },
+    { "id": "n10", "kind": "box", "parent_id": "n0", "layout": { "position": "absolute", "display": "block", "box_sizing": "content_box", "top": 121.0, "left": 34.0, "width": 120.0, "height": 18.0, "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 13.0, "font_weight": 400, "line_height": { "kind": "length", "value": 18.0 }, "color": "#6b7280" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/5" } },
+    { "id": "n11", "kind": "text", "parent_id": "n10", "text_content": "Last sync 2 min ago", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 13.0, "font_weight": 400, "line_height": { "kind": "length", "value": 18.0 }, "color": "#6b7280" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/5/0" } },
+    { "id": "n12", "kind": "control", "parent_id": "n0", "control_kind": "button", "layout": { "position": "absolute", "display": "inline_flex", "box_sizing": "border_box", "top": 124.0, "left": 116.0, "width": 88.0, "height": 36.0, "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "align_items": "center", "justify_content": "center" }, "paint": { "background_color": "#ffffff", "border": { "width": 1.0, "color": "#d1d5db" }, "border_radius": 10.0, "cursor": "pointer" }, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 14.0, "font_weight": 600, "line_height": { "kind": "length", "value": 14.0 }, "color": "#111827" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/6" } },
+    { "id": "n13", "kind": "text", "parent_id": "n12", "text_content": "Later", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 14.0, "font_weight": 600, "line_height": { "kind": "length", "value": 14.0 }, "color": "#111827" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/6/0" } },
+    { "id": "n14", "kind": "control", "parent_id": "n0", "control_kind": "button", "layout": { "position": "absolute", "display": "inline_flex", "box_sizing": "border_box", "top": 124.0, "left": 212.0, "width": 88.0, "height": 36.0, "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "align_items": "center", "justify_content": "center" }, "paint": { "background_color": "#111827", "border_radius": 10.0, "cursor": "pointer" }, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 14.0, "font_weight": 600, "line_height": { "kind": "length", "value": 14.0 }, "color": "#ffffff" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/7" } },
+    { "id": "n15", "kind": "text", "parent_id": "n14", "text_content": "Open", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 14.0, "font_weight": 600, "line_height": { "kind": "length", "value": 14.0 }, "color": "#ffffff" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/7/0" } }
+  ]
+}`,
+        before: {
+          html: `  <div class="profile-card">
+    <div class="avatar">A</div>
+    <div class="name">Ava Martinez</div>
+    <div class="email">ava@northstar.dev</div>
+    <div class="badge">Active</div>
+    <div class="status-dot"></div>
+    <div class="status-text">Last sync 2 min ago</div>
+    <button class="button secondary" type="button">Later</button>
+    <button class="button primary" type="button">Open</button>
+  </div>`,
+          css: `body {
+  margin: 0;
+  background: #f3f4f6;
+  font-family: Inter, sans-serif;
+}
+.profile-card,
+.avatar,
+.badge,
+.button {
+  box-sizing: border-box;
+}
+.profile-card {
+  position: absolute;
+  left: 24px;
+  top: 20px;
+  width: 320px;
+  height: 180px;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  background: #ffffff;
+}
+.avatar {
+  position: absolute;
+  left: 20px;
+  top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 20px;
+}
+.name {
+  position: absolute;
+  left: 84px;
+  top: 22px;
+  width: 140px;
+  height: 20px;
+  color: #111827;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 20px;
+}
+.email {
+  position: absolute;
+  left: 84px;
+  top: 46px;
+  width: 180px;
+  height: 18px;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 18px;
+}
+.badge {
+  position: absolute;
+  left: 20px;
+  top: 88px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  padding: 0 10px;
+  border: 1px solid #a7f3d0;
+  border-radius: 999px;
+  background: #ecfdf5;
+  color: #065f46;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 12px;
+}
+.status-dot {
+  position: absolute;
+  left: 20px;
+  top: 126px;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #10b981;
+}
+.status-text {
+  position: absolute;
+  left: 34px;
+  top: 121px;
+  width: 120px;
+  height: 18px;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 18px;
+}
+.button {
+  position: absolute;
+  top: 124px;
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 88px;
+  height: 36px;
+  margin: 0;
+  padding: 0;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 14px;
+  cursor: pointer;
+}
+.button.secondary {
+  left: 116px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #111827;
+}
+.button.primary {
+  left: 212px;
+  border: 0;
+  background: #111827;
+  color: #ffffff;
+}`
+        },
+        after: {
+          html: `    <div class="n0">
+      <div class="n1">A</div>
+      <div class="n3">Ava Martinez</div>
+      <div class="n5">ava@northstar.dev</div>
+      <div class="n7">Active</div>
+      <div class="n9"></div>
+      <div class="n10">Last sync 2 min ago</div>
+      <button class="n12">Later</button>
+      <button class="n14">Open</button>
+    </div>`,
+          css: `body { margin: 0; background: #f3f4f6; font-family: Inter, sans-serif; }
+.n0 {
+  position: absolute;
+  box-sizing: border-box;
+  top: 20px;
+  left: 24px;
+  width: 320px;
+  height: 180px;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+}
+.n1 {
+  position: absolute;
+  display: flex;
+  box-sizing: border-box;
+  top: 20px;
+  left: 20px;
+  width: 48px;
+  height: 48px;
+  align-items: center;
+  justify-content: center;
+  background-color: #dbeafe;
+  border-radius: 999px;
+  font-family: Inter, sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 20px;
+  color: #1d4ed8;
+}
+.n3 {
+  position: absolute;
+  top: 22px;
+  left: 84px;
+  width: 140px;
+  height: 20px;
+  font-family: Inter, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 20px;
+  color: #111827;
+}
+.n5 {
+  position: absolute;
+  top: 46px;
+  left: 84px;
+  width: 180px;
+  height: 18px;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 18px;
+  color: #6b7280;
+}
+.n7 {
+  position: absolute;
+  display: inline-flex;
+  box-sizing: border-box;
+  top: 88px;
+  left: 20px;
+  height: 24px;
+  padding: 0px 10px;
+  align-items: center;
+  justify-content: center;
+  background-color: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 999px;
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 12px;
+  color: #065f46;
+}
+.n9 {
+  position: absolute;
+  top: 126px;
+  left: 20px;
+  width: 8px;
+  height: 8px;
+  background-color: #10b981;
+  border-radius: 999px;
+}
+.n10 {
+  position: absolute;
+  top: 121px;
+  left: 34px;
+  width: 120px;
+  height: 18px;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 18px;
+  color: #6b7280;
+}
+.n12 {
+  appearance: none;
+  position: absolute;
+  display: inline-flex;
+  box-sizing: border-box;
+  top: 124px;
+  left: 116px;
+  width: 88px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  background-color: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 14px;
+  color: #111827;
+}
+.n14 {
+  appearance: none;
+  position: absolute;
+  display: inline-flex;
+  box-sizing: border-box;
+  top: 124px;
+  left: 212px;
+  width: 88px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  background-color: #111827;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 14px;
+  color: #ffffff;
+}`
+        }
+      },
+
+      {
+        id: "stacked_info_card",
+        label: "Stacked Info Card",
+        note: `<strong>Flex column layout.</strong> Unlike absolute positioning, elements here have no explicit coordinates — their positions emerge from the flex algorithm. Tests that <code>display: flex</code>, <code>flex-direction: column</code>, and <code>gap</code> all survive the IR. Also exercises an inline-flex chip badge with its own padding, border, and border-radius.`,
+        ir: `{
+  "schema_version": 1,
+  "scene_id": "stacked_info_card",
+  "corpus": "v0.1",
+  "execution_mode": "static",
+  "nodes": [
+    { "id": "n0", "kind": "box", "layout": { "position": "static", "display": "flex", "box_sizing": "border_box", "width": 320.0, "margin": { "top": 24.0, "right": 24.0, "bottom": 24.0, "left": 24.0 }, "padding": { "top": 20.0, "right": 20.0, "bottom": 20.0, "left": 20.0 }, "flex_direction": "column", "gap": 12.0 }, "paint": { "background_color": "#ffffff", "border": { "width": 1.0, "color": "#dbe3ec" }, "border_radius": 16.0 }, "source": { "doc_id": 0, "dom_path": "0/0/1/0" } },
+    { "id": "n1", "kind": "box", "parent_id": "n0", "layout": { "position": "static", "display": "inline_flex", "box_sizing": "border_box", "height": 24.0, "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 10.0, "bottom": 0.0, "left": 10.0 }, "align_items": "center", "justify_content": "center", "align_self": "flex_start" }, "paint": { "background_color": "#eef2ff", "border": { "width": 1.0, "color": "#c7d2fe" }, "border_radius": 999.0 }, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 12.0, "font_weight": 600, "line_height": { "kind": "length", "value": 12.0 }, "color": "#4338ca" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/0" } },
+    { "id": "n2", "kind": "text", "parent_id": "n1", "text_content": "System", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 12.0, "font_weight": 600, "line_height": { "kind": "length", "value": 12.0 }, "color": "#4338ca" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/0/0" } },
+    { "id": "n3", "kind": "box", "parent_id": "n0", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 20.0, "font_weight": 600, "line_height": { "kind": "length", "value": 24.0 }, "color": "#0f172a" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/1" } },
+    { "id": "n4", "kind": "text", "parent_id": "n3", "text_content": "Weekly rollout is on track", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 20.0, "font_weight": 600, "line_height": { "kind": "length", "value": 24.0 }, "color": "#0f172a" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/1/0" } },
+    { "id": "n5", "kind": "box", "parent_id": "n0", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 14.0, "font_weight": 400, "line_height": { "kind": "length", "value": 22.0 }, "color": "#475569" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/2" } },
+    { "id": "n6", "kind": "text", "parent_id": "n5", "text_content": "Six core checks completed with no visual regressions in the approved surfaces.", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 14.0, "font_weight": 400, "line_height": { "kind": "length", "value": 22.0 }, "color": "#475569" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/2/0" } },
+    { "id": "n7", "kind": "box", "parent_id": "n0", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 12.0, "font_weight": 500, "line_height": { "kind": "length", "value": 16.0 }, "color": "#64748b" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/3" } },
+    { "id": "n8", "kind": "text", "parent_id": "n7", "text_content": "Updated 12 minutes ago", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 12.0, "font_weight": 500, "line_height": { "kind": "length", "value": 16.0 }, "color": "#64748b" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/3/0" } }
+  ]
+}`,
+        before: {
+          html: `  <div class="card">
+    <div class="pill">System</div>
+    <h1>Weekly rollout is on track</h1>
+    <p>Six core checks completed with no visual regressions in the approved surfaces.</p>
+    <div class="meta">Updated 12 minutes ago</div>
+  </div>`,
+          css: `body {
+  margin: 0;
+  background: #f8fafc;
+  font-family: Inter, sans-serif;
+}
+.card,
+.pill {
+  box-sizing: border-box;
+}
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 320px;
+  margin: 24px;
+  padding: 20px;
+  border: 1px solid #dbe3ec;
+  border-radius: 16px;
+  background: #ffffff;
+}
+.pill {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  padding: 0 10px;
+  border: 1px solid #c7d2fe;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #4338ca;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 12px;
+}
+h1 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 24px;
+}
+p {
+  margin: 0;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 22px;
+}
+.meta {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+}`
+        },
+        after: {
+          html: `    <div class="n0">
+      <div class="n1">System</div>
+      <div class="n3">Weekly rollout is on track</div>
+      <div class="n5">Six core checks completed with no visual regressions in the approved surfaces.</div>
+      <div class="n7">Updated 12 minutes ago</div>
+    </div>`,
+          css: `body { margin: 0; background: #f8fafc; font-family: Inter, sans-serif; }
+.n0 {
+  display: flex;
+  box-sizing: border-box;
+  width: 320px;
+  margin: 24px;
+  padding: 20px;
+  flex-direction: column;
+  gap: 12px;
+  background-color: #ffffff;
+  border: 1px solid #dbe3ec;
+  border-radius: 16px;
+}
+.n1 {
+  display: inline-flex;
+  box-sizing: border-box;
+  height: 24px;
+  padding: 0px 10px;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-start;
+  background-color: #eef2ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 999px;
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 12px;
+  color: #4338ca;
+}
+.n3 {
+  font-family: Inter, sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 24px;
+  color: #0f172a;
+}
+.n5 {
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 22px;
+  color: #475569;
+}
+.n7 {
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  color: #64748b;
+}`
+        }
+      },
+
+      {
+        id: "action_row_variants",
+        label: "Action Row Variants",
+        note: `<strong>Three buttons, three paint variants — primary, secondary, quiet.</strong> Structurally identical nodes with different fills and borders. This is the core test for <code>NodeKind::Control</code> emission: the emitter injects <code>appearance: none</code> first in every button rule, stripping OS-level chrome (gradients, inset borders, text-baseline drift) so the After render matches Before without any source-side hacks.`,
+        ir: `{
+  "schema_version": 1,
+  "scene_id": "action_row_variants",
+  "corpus": "v0.1",
+  "execution_mode": "static",
+  "nodes": [
+    { "id": "n0", "kind": "box", "layout": { "position": "static", "display": "inline_flex", "box_sizing": "border_box", "margin": { "top": 24.0, "right": 24.0, "bottom": 24.0, "left": 24.0 }, "padding": { "top": 16.0, "right": 16.0, "bottom": 16.0, "left": 16.0 }, "align_items": "center", "gap": 12.0 }, "paint": { "background_color": "#ffffff", "border": { "width": 1.0, "color": "#e2e8f0" }, "border_radius": 14.0 }, "source": { "doc_id": 0, "dom_path": "0/0/1/0" } },
+    { "id": "n1", "kind": "control", "parent_id": "n0", "control_kind": "button", "layout": { "position": "static", "display": "inline_flex", "box_sizing": "border_box", "height": 36.0, "min_width": 92.0, "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 14.0, "bottom": 0.0, "left": 14.0 }, "align_items": "center", "justify_content": "center" }, "paint": { "background_color": "#0f172a", "border_radius": 10.0 }, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 14.0, "font_weight": 600, "line_height": { "kind": "length", "value": 14.0 }, "color": "#ffffff" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/0" } },
+    { "id": "n2", "kind": "text", "parent_id": "n1", "text_content": "Save", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 14.0, "font_weight": 600, "line_height": { "kind": "length", "value": 14.0 }, "color": "#ffffff" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/0/0" } },
+    { "id": "n3", "kind": "control", "parent_id": "n0", "control_kind": "button", "layout": { "position": "static", "display": "inline_flex", "box_sizing": "border_box", "height": 36.0, "min_width": 92.0, "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 14.0, "bottom": 0.0, "left": 14.0 }, "align_items": "center", "justify_content": "center" }, "paint": { "background_color": "#ffffff", "border": { "width": 1.0, "color": "#cbd5e1" }, "border_radius": 10.0 }, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 14.0, "font_weight": 600, "line_height": { "kind": "length", "value": 14.0 }, "color": "#0f172a" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/1" } },
+    { "id": "n4", "kind": "text", "parent_id": "n3", "text_content": "Preview", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 14.0, "font_weight": 600, "line_height": { "kind": "length", "value": 14.0 }, "color": "#0f172a" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/1/0" } },
+    { "id": "n5", "kind": "control", "parent_id": "n0", "control_kind": "button", "layout": { "position": "static", "display": "inline_flex", "box_sizing": "border_box", "height": 36.0, "min_width": 92.0, "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 14.0, "bottom": 0.0, "left": 14.0 }, "align_items": "center", "justify_content": "center" }, "paint": { "background_color": "#f8fafc", "border": { "width": 1.0, "color": "#e2e8f0" }, "border_radius": 10.0 }, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 14.0, "font_weight": 600, "line_height": { "kind": "length", "value": 14.0 }, "color": "#475569" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/2" } },
+    { "id": "n6", "kind": "text", "parent_id": "n5", "text_content": "Later", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 14.0, "font_weight": 600, "line_height": { "kind": "length", "value": 14.0 }, "color": "#475569" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/2/0" } }
+  ]
+}`,
+        before: {
+          html: `  <div class="row">
+    <button class="button primary" type="button">Save</button>
+    <button class="button secondary" type="button">Preview</button>
+    <button class="button quiet" type="button">Later</button>
+  </div>`,
+          css: `body {
+  margin: 0;
+  background: #f8fafc;
+  font-family: Inter, sans-serif;
+}
+.row,
+.button {
+  box-sizing: border-box;
+}
+.row {
+  display: inline-flex;
+  gap: 12px;
+  align-items: center;
+  margin: 24px;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #ffffff;
+}
+.button {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 92px;
+  height: 36px;
+  margin: 0;
+  padding: 0 14px;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 14px;
+}
+.button.primary {
+  border: 0;
+  background: #0f172a;
+  color: #ffffff;
+}
+.button.secondary {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #0f172a;
+}
+.button.quiet {
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #475569;
+}`
+        },
+        after: {
+          html: `    <div class="n0">
+      <button class="n1">Save</button>
+      <button class="n3">Preview</button>
+      <button class="n5">Later</button>
+    </div>`,
+          css: `body { margin: 0; background: #f8fafc; font-family: Inter, sans-serif; }
+.n0 {
+  display: inline-flex;
+  box-sizing: border-box;
+  margin: 24px;
+  padding: 16px;
+  align-items: center;
+  gap: 12px;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+}
+.n1 {
+  appearance: none;
+  display: inline-flex;
+  box-sizing: border-box;
+  height: 36px;
+  min-width: 92px;
+  padding: 0px 14px;
+  align-items: center;
+  justify-content: center;
+  background-color: #0f172a;
+  border-radius: 10px;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 14px;
+  color: #ffffff;
+}
+.n3 {
+  appearance: none;
+  display: inline-flex;
+  box-sizing: border-box;
+  height: 36px;
+  min-width: 92px;
+  padding: 0px 14px;
+  align-items: center;
+  justify-content: center;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 14px;
+  color: #0f172a;
+}
+.n5 {
+  appearance: none;
+  display: inline-flex;
+  box-sizing: border-box;
+  height: 36px;
+  min-width: 92px;
+  padding: 0px 14px;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 14px;
+  color: #475569;
+}`
+        }
+      },
+
+      {
+        id: "nested_panel_inset",
+        label: "Nested Panel",
+        note: `<strong>Two levels of flex nesting.</strong> An outer column container holds inner row sub-panels, each of which is itself a flex container. Tests that parent–child IR relationships survive extraction correctly when a flex child is also a flex parent. Nesting bugs — wrong parent IDs, dropped children, misordered siblings — surface here faster than anywhere else.`,
+        ir: `{
+  "schema_version": 1,
+  "scene_id": "nested_panel_inset",
+  "corpus": "v0.1",
+  "execution_mode": "static",
+  "nodes": [
+    { "id": "n0", "kind": "box", "layout": { "position": "static", "display": "flex", "box_sizing": "border_box", "width": 320.0, "margin": { "top": 24.0, "right": 24.0, "bottom": 24.0, "left": 24.0 }, "padding": { "top": 20.0, "right": 20.0, "bottom": 20.0, "left": 20.0 }, "flex_direction": "column", "gap": 16.0 }, "paint": { "background_color": "#ffffff", "border": { "width": 1.0, "color": "#d7dee7" }, "border_radius": 18.0 }, "source": { "doc_id": 0, "dom_path": "0/0/1/0" } },
+    { "id": "n1", "kind": "box", "parent_id": "n0", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 15.0, "font_weight": 600, "line_height": { "kind": "length", "value": 20.0 }, "color": "#0f172a" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/0" } },
+    { "id": "n2", "kind": "text", "parent_id": "n1", "text_content": "Pipeline health", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 15.0, "font_weight": 600, "line_height": { "kind": "length", "value": 20.0 }, "color": "#0f172a" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/0/0" } },
+    { "id": "n3", "kind": "box", "parent_id": "n0", "layout": { "position": "static", "display": "flex", "box_sizing": "border_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 16.0, "right": 16.0, "bottom": 16.0, "left": 16.0 }, "flex_direction": "column", "gap": 8.0 }, "paint": { "background_color": "#f8fafc", "border": { "width": 1.0, "color": "#cbd5e1" }, "border_radius": 12.0 }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/1" } },
+    { "id": "n4", "kind": "box", "parent_id": "n3", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 12.0, "font_weight": 600, "line_height": { "kind": "length", "value": 16.0 }, "color": "#64748b" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/1/0" } },
+    { "id": "n5", "kind": "text", "parent_id": "n4", "text_content": "Ready jobs", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 12.0, "font_weight": 600, "line_height": { "kind": "length", "value": 16.0 }, "color": "#64748b" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/1/0/0" } },
+    { "id": "n6", "kind": "box", "parent_id": "n3", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 32.0, "font_weight": 700, "line_height": { "kind": "length", "value": 36.0 }, "color": "#111827" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/1/1" } },
+    { "id": "n7", "kind": "text", "parent_id": "n6", "text_content": "24", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 32.0, "font_weight": 700, "line_height": { "kind": "length", "value": 36.0 }, "color": "#111827" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/1/1/0" } },
+    { "id": "n8", "kind": "box", "parent_id": "n3", "layout": { "position": "static", "display": "inline_flex", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "align_items": "center", "gap": 8.0 }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 13.0, "font_weight": 500, "line_height": { "kind": "length", "value": 18.0 }, "color": "#475569" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/1/2" } },
+    { "id": "n9", "kind": "box", "parent_id": "n8", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "width": 8.0, "height": 8.0, "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": { "background_color": "#10b981", "border_radius": 999.0 }, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 13.0, "font_weight": 500, "line_height": { "kind": "length", "value": 18.0 }, "color": "#475569" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/1/2/0" } },
+    { "id": "n10", "kind": "text", "parent_id": "n8", "text_content": "Stable", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 13.0, "font_weight": 500, "line_height": { "kind": "length", "value": 18.0 }, "color": "#475569" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/1/2/1" } }
+  ]
+}`,
+        before: {
+          html: `  <div class="shell">
+    <div class="header">Pipeline health</div>
+    <div class="panel">
+      <div class="label">Ready jobs</div>
+      <div class="value">24</div>
+      <div class="status">
+        <span class="dot"></span>
+        Stable
+      </div>
+    </div>
+  </div>`,
+          css: `body {
+  margin: 0;
+  background: #eef2f7;
+  font-family: Inter, sans-serif;
+}
+.shell,
+.panel {
+  box-sizing: border-box;
+}
+.shell {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 320px;
+  margin: 24px;
+  padding: 20px;
+  border: 1px solid #d7dee7;
+  border-radius: 18px;
+  background: #ffffff;
+}
+.header {
+  color: #0f172a;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 20px;
+}
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+.label {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+}
+.value {
+  color: #111827;
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 36px;
+}
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 18px;
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #10b981;
+}`
+        },
+        after: {
+          html: `    <div class="n0">
+      <div class="n1">Pipeline health</div>
+      <div class="n3">
+        <div class="n4">Ready jobs</div>
+        <div class="n6">24</div>
+        <div class="n8">
+          <div class="n9"></div>
+          Stable
+        </div>
+      </div>
+    </div>`,
+          css: `body { margin: 0; background: #eef2f7; font-family: Inter, sans-serif; }
+.n0 {
+  display: flex;
+  box-sizing: border-box;
+  width: 320px;
+  margin: 24px;
+  padding: 20px;
+  flex-direction: column;
+  gap: 16px;
+  background-color: #ffffff;
+  border: 1px solid #d7dee7;
+  border-radius: 18px;
+}
+.n1 {
+  font-family: Inter, sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 20px;
+  color: #0f172a;
+}
+.n3 {
+  display: flex;
+  box-sizing: border-box;
+  padding: 16px;
+  flex-direction: column;
+  gap: 8px;
+  background-color: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+}
+.n4 {
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  color: #64748b;
+}
+.n6 {
+  font-family: Inter, sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 36px;
+  color: #111827;
+}
+.n8 {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 18px;
+  color: #475569;
+}
+.n9 {
+  width: 8px;
+  height: 8px;
+  background-color: #10b981;
+  border-radius: 999px;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 18px;
+  color: #475569;
+}`
+        }
+      },
+
+      {
+        id: "typography_specimen",
+        label: "Typography",
+        note: `<strong>Typography pipeline in isolation.</strong> Four text blocks with distinct <code>font-family</code> stacks (comma-separated fallbacks), <code>font-size</code>, <code>font-weight</code>, and <code>line-height</code> values including both <code>px</code> lengths and the keyword <code>normal</code>. Every value must survive CSS cascade resolution and round-trip re-emission without substitution, coercion, or loss.`,
+        ir: `{
+  "schema_version": 1,
+  "scene_id": "typography_specimen",
+  "corpus": "v0.1",
+  "execution_mode": "static",
+  "nodes": [
+    { "id": "n0", "kind": "box", "layout": { "position": "static", "display": "block", "box_sizing": "border_box", "width": 360.0, "margin": { "top": 24.0, "right": 24.0, "bottom": 24.0, "left": 24.0 }, "padding": { "top": 20.0, "right": 20.0, "bottom": 20.0, "left": 20.0 } }, "paint": { "background_color": "#ffffff", "border": { "width": 1.0, "color": "#e2e8f0" }, "border_radius": 16.0 }, "source": { "doc_id": 0, "dom_path": "0/0/1/0" } },
+    { "id": "n1", "kind": "box", "parent_id": "n0", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "width": 300.0, "margin": { "top": 0.0, "right": 0.0, "bottom": 12.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 24.0, "font_weight": 700, "line_height": { "kind": "length", "value": 30.0 }, "color": "#0f172a" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/0" } },
+    { "id": "n2", "kind": "text", "parent_id": "n1", "text_content": "Normalization should preserve meaning and shape.", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 24.0, "font_weight": 700, "line_height": { "kind": "length", "value": 30.0 }, "color": "#0f172a" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/0/0" } },
+    { "id": "n3", "kind": "box", "parent_id": "n0", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "width": 300.0, "margin": { "top": 0.0, "right": 0.0, "bottom": 12.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 15.0, "font_weight": 400, "line_height": { "kind": "length", "value": 24.0 }, "color": "#334155" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/1" } },
+    { "id": "n4", "kind": "text", "parent_id": "n3", "text_content": "The first useful proof is a round-trip that keeps the approved UI visually stable while making implicit browser behavior explicit.", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 15.0, "font_weight": 400, "line_height": { "kind": "length", "value": 24.0 }, "color": "#334155" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/1/0" } },
+    { "id": "n5", "kind": "box", "parent_id": "n0", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 12.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 12.0, "font_weight": 500, "line_height": { "kind": "length", "value": 16.0 }, "color": "#64748b" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/2" } },
+    { "id": "n6", "kind": "text", "parent_id": "n5", "text_content": "Source of truth: approved HTML and CSS.", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 12.0, "font_weight": 500, "line_height": { "kind": "length", "value": 16.0 }, "color": "#64748b" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/2/0" } },
+    { "id": "n7", "kind": "box", "parent_id": "n0", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 13.0, "font_weight": 600, "line_height": { "kind": "length", "value": 16.0 }, "color": "#1d4ed8" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/3" } },
+    { "id": "n8", "kind": "text", "parent_id": "n7", "text_content": "Strict compiler mode", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 13.0, "font_weight": 600, "line_height": { "kind": "length", "value": 16.0 }, "color": "#1d4ed8" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0/3/0" } }
+  ]
+}`,
+        before: {
+          html: `  <div class="specimen">
+    <h1>Normalization should preserve meaning and shape.</h1>
+    <p>The first useful proof is a round-trip that keeps the approved UI visually stable while making implicit browser behavior explicit.</p>
+    <div class="caption">Source of truth: approved HTML and CSS.</div>
+    <div class="label">Strict compiler mode</div>
+  </div>`,
+          css: `body {
+  margin: 0;
+  background: #ffffff;
+  font-family: Inter, sans-serif;
+}
+.specimen {
+  box-sizing: border-box;
+  width: 360px;
+  margin: 24px;
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #ffffff;
+}
+h1 {
+  width: 300px;
+  margin: 0 0 12px;
+  color: #0f172a;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 30px;
+}
+p {
+  width: 300px;
+  margin: 0 0 12px;
+  color: #334155;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 24px;
+}
+.caption {
+  margin-bottom: 12px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+}
+.label {
+  color: #1d4ed8;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 16px;
+}`
+        },
+        after: {
+          html: `    <div class="n0">
+      <div class="n1">Normalization should preserve meaning and shape.</div>
+      <div class="n3">The first useful proof is a round-trip that keeps the approved UI visually stable while making implicit browser behavior explicit.</div>
+      <div class="n5">Source of truth: approved HTML and CSS.</div>
+      <div class="n7">Strict compiler mode</div>
+    </div>`,
+          css: `body { margin: 0; background: #ffffff; font-family: Inter, sans-serif; }
+.n0 {
+  box-sizing: border-box;
+  width: 360px;
+  margin: 24px;
+  padding: 20px;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+}
+.n1 {
+  width: 300px;
+  margin: 0px 0px 12px 0px;
+  font-family: Inter, sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 30px;
+  color: #0f172a;
+}
+.n3 {
+  width: 300px;
+  margin: 0px 0px 12px 0px;
+  font-family: Inter, sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 24px;
+  color: #334155;
+}
+.n5 {
+  margin: 0px 0px 12px 0px;
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  color: #64748b;
+}
+.n7 {
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 16px;
+  color: #1d4ed8;
+}`
+        }
+      },
+
+      {
+        id: "update_toast",
+        label: "Update Toast",
+        note: `<strong>Mixed layout: flex body + absolute badge.</strong> A flex column notification card containing a text block, a paragraph, a button, and a notification dot that breaks out of flow with <code>position: absolute; top: -6px</code>. Tests that negative CSS coordinates and mixed layout modes coexist correctly in the IR — the badge literally pokes above the card boundary.`,
+        ir: `{
+  "schema_version": 1,
+  "scene_id": "update_toast",
+  "corpus": "v0.1",
+  "execution_mode": "static",
+  "nodes": [
+    { "id": "n0", "kind": "box", "layout": { "position": "static", "display": "flex", "box_sizing": "border_box", "width": 320.0, "height": 140.0, "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 24.0, "right": 24.0, "bottom": 24.0, "left": 24.0 }, "flex_direction": "column", "gap": 8.0 }, "paint": { "background_color": "#ffffff", "border": { "width": 1.0, "color": "#e5e7eb" }, "border_radius": 12.0 }, "source": { "doc_id": 0, "dom_path": "0/0" } },
+    { "id": "n1", "kind": "box", "parent_id": "n0", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 16.0, "font_weight": 600, "line_height": { "kind": "length", "value": 24.0 }, "color": "#111827" }, "source": { "doc_id": 0, "dom_path": "0/0/0" } },
+    { "id": "n2", "kind": "text", "parent_id": "n1", "text_content": "Update Ready", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 16.0, "font_weight": 600, "line_height": { "kind": "length", "value": 24.0 }, "color": "#111827" }, "source": { "doc_id": 0, "dom_path": "0/0/0/0" } },
+    { "id": "n3", "kind": "box", "parent_id": "n0", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 14.0, "font_weight": 400, "line_height": { "kind": "length", "value": 20.0 }, "color": "#6b7280" }, "source": { "doc_id": 0, "dom_path": "0/0/1" } },
+    { "id": "n4", "kind": "text", "parent_id": "n3", "text_content": "Restart to apply the latest changes.", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 14.0, "font_weight": 400, "line_height": { "kind": "length", "value": 20.0 }, "color": "#6b7280" }, "source": { "doc_id": 0, "dom_path": "0/0/1/0" } },
+    { "id": "n5", "kind": "control", "parent_id": "n0", "control_kind": "button", "layout": { "position": "static", "display": "block", "box_sizing": "border_box", "width": 120.0, "height": 36.0, "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": { "background_color": "#2563eb", "border_radius": 6.0, "cursor": "pointer" }, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 14.0, "font_weight": 500, "line_height": { "kind": "length", "value": 36.0 }, "color": "#ffffff" }, "source": { "doc_id": 0, "dom_path": "0/0/2" } },
+    { "id": "n6", "kind": "text", "parent_id": "n5", "text_content": "Restart", "layout": { "position": "static", "display": "block", "box_sizing": "content_box", "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": {}, "typography": { "font_family": ["Inter", "sans-serif"], "font_size": 14.0, "font_weight": 500, "line_height": { "kind": "length", "value": 36.0 }, "color": "#ffffff" }, "source": { "doc_id": 0, "dom_path": "0/0/2/0" } },
+    { "id": "n7", "kind": "box", "parent_id": "n0", "layout": { "position": "absolute", "display": "block", "box_sizing": "border_box", "top": -6.0, "left": 310.0, "width": 16.0, "height": 16.0, "margin": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 }, "padding": { "top": 0.0, "right": 0.0, "bottom": 0.0, "left": 0.0 } }, "paint": { "background_color": "#ef4444", "border": { "width": 2.0, "color": "#ffffff" }, "border_radius": 8.0 }, "source": { "doc_id": 0, "dom_path": "0/0/3" } }
+  ]
+}`,
+        before: {
+          html: `<div class="toast-card">
+    <h1 class="toast-title">Update Ready</h1>
+    <p class="toast-body">Restart to apply the latest changes.</p>
+    <button class="toast-btn">Restart</button>
+    <div class="toast-badge"></div>
+</div>`,
+          css: `body {
+  margin: 0;
+  background: #f3f4f6;
+  font-family: Inter, sans-serif;
+  padding: 24px;
+}
+.toast-card {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 320px;
+  height: 140px;
+  padding: 24px;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  position: relative;
+}
+.toast-title {
+  margin: 0px;
+  font-family: Inter, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  color: #111827;
+}
+.toast-body {
+  margin: 0px;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  color: #6b7280;
+}
+.toast-btn {
+  box-sizing: border-box;
+  appearance: none;
+  cursor: pointer;
+  width: 120px;
+  height: 36px;
+  background-color: #2563eb;
+  color: #ffffff;
+  border: 0;
+  border-radius: 6px;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 36px;
+}
+.toast-badge {
+  box-sizing: border-box;
+  position: absolute;
+  top: -6px;
+  left: 310px;
+  width: 16px;
+  height: 16px;
+  background-color: #ef4444;
+  border: 2px solid #ffffff;
+  border-radius: 8px;
+}`
+        },
+        after: {
+          html: `    <div class="n0">
+      <div class="n1">Update Ready</div>
+      <div class="n3">Restart to apply the latest changes.</div>
+      <button class="n5">Restart</button>
+      <div class="n7"></div>
+    </div>`,
+          css: `body { margin: 0; background: #f3f4f6; font-family: Inter, sans-serif; padding: 24px; }
+.n0 {
+  display: flex;
+  box-sizing: border-box;
+  width: 320px;
+  height: 140px;
+  padding: 24px;
+  flex-direction: column;
+  gap: 8px;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  position: relative;
+}
+.n1 {
+  font-family: Inter, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  color: #111827;
+}
+.n3 {
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  color: #6b7280;
+}
+.n5 {
+  appearance: none;
+  box-sizing: border-box;
+  width: 120px;
+  height: 36px;
+  background-color: #2563eb;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 36px;
+  color: #ffffff;
+}
+.n7 {
+  position: absolute;
+  box-sizing: border-box;
+  top: -6px;
+  left: 310px;
+  width: 16px;
+  height: 16px;
+  background-color: #ef4444;
+  border: 2px solid #ffffff;
+  border-radius: 8px;
+}`
+        }
+      }
+    ]
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────────────────────────
+let currentVersion = "v0.1";
+let currentSceneIdx = 0;
+let mode = "before";     // "before" | "after"
+let codeTab = "html";    // "html"   | "css"
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ACTIONS
+// ─────────────────────────────────────────────────────────────────────────────
+function setVersion(v) {
+  currentVersion = v;
+  currentSceneIdx = 0;
+  render();
+}
+
+function setScene(idx) {
+  currentSceneIdx = idx;
+  render();
+}
+
+function setMode(m) {
+  mode = m;
+  render();
+}
+
+function setCodeTab(t) {
+  codeTab = t;
+  renderCode();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────────────────────────────────────────
+function render() {
+  renderVersionPicker();
+  renderSceneTabs();
+  renderNote();
+  renderToggle();
+  renderPreview();
+  renderCode();
+}
+
+function renderNote() {
+  const scene = DATA[currentVersion].scenes[currentSceneIdx];
+  document.getElementById('scene-note').innerHTML = scene.note || '';
+}
+
+function renderVersionPicker() {
+  const sel = document.getElementById('version-picker');
+  sel.innerHTML = '';
+  Object.keys(DATA).forEach(v => {
+    const opt = document.createElement('option');
+    opt.value = v;
+    opt.textContent = v;
+    opt.selected = v === currentVersion;
+    sel.appendChild(opt);
+  });
+}
+
+function renderSceneTabs() {
+  const container = document.getElementById('scene-tabs');
+  container.innerHTML = '';
+  const scenes = DATA[currentVersion].scenes;
+  scenes.forEach((scene, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'scene-tab' + (idx === currentSceneIdx ? ' active' : '');
+    btn.textContent = scene.label;
+    btn.onclick = () => setScene(idx);
+    container.appendChild(btn);
+  });
+}
+
+function renderToggle() {
+  document.getElementById('btn-before').className = 'toggle-btn' + (mode === 'before' ? ' active' : '');
+  document.getElementById('btn-after').className  = 'toggle-btn' + (mode === 'after'  ? ' active' : '');
+  const scene = DATA[currentVersion].scenes[currentSceneIdx];
+  document.getElementById('mode-desc').textContent =
+    mode === 'before'
+      ? `source.html + source.css — ${scene.id}`
+      : `expected/roundtrip.html + roundtrip.css — ${scene.id}`;
+}
+
+function renderPreview() {
+  const scene = DATA[currentVersion].scenes[currentSceneIdx];
+  const data  = mode === 'before' ? scene.before : scene.after;
+  const src   = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+${data.css}
+</style>
+</head>
+<body>
+${data.html}
+</body>
+</html>`;
+  document.getElementById('preview-frame').srcdoc = src;
+}
+
+function renderCode() {
+  document.getElementById('tab-html').className = 'code-tab' + (codeTab === 'html' ? ' active' : '');
+  document.getElementById('tab-css').className  = 'code-tab' + (codeTab === 'css'  ? ' active' : '');
+  document.getElementById('tab-ir').className   = 'code-tab' + (codeTab === 'ir'   ? ' active' : '');
+
+  const scene = DATA[currentVersion].scenes[currentSceneIdx];
+  let raw, lang;
+  if (codeTab === 'ir') {
+    raw  = scene.ir;
+    lang = 'json';
+  } else {
+    const data = mode === 'before' ? scene.before : scene.after;
+    raw  = codeTab === 'html' ? data.html : data.css;
+    lang = codeTab === 'html' ? 'html' : 'css';
+  }
+
+  const result = hljs.highlight(raw, { language: lang });
+  document.getElementById('code-display').innerHTML = result.value;
+
+  const lines = raw.split('\n').length;
+  document.getElementById('line-count').textContent = lines + ' lines';
+
+  // Scroll code pane back to top on scene/mode change
+  document.getElementById('code-scroll').scrollTop = 0;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WIRE UP VERSION PICKER
+// ─────────────────────────────────────────────────────────────────────────────
+document.getElementById('version-picker').addEventListener('change', e => setVersion(e.target.value));
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>

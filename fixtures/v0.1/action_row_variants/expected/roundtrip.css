@@ -11,6 +11,7 @@
 }
 
 .n1 {
+  appearance: none;
   display: inline-flex;
   box-sizing: border-box;
   height: 36px;
@@ -28,6 +29,7 @@
 }
 
 .n3 {
+  appearance: none;
   display: inline-flex;
   box-sizing: border-box;
   height: 36px;
@@ -46,6 +48,7 @@
 }
 
 .n5 {
+  appearance: none;
   display: inline-flex;
   box-sizing: border-box;
   height: 36px;

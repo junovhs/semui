@@ -10,7 +10,7 @@ mod tests;
 
 use std::collections::{HashMap, HashSet};
 
-use crate::HtmlNodeKind;
+use crate::{HtmlNode, HtmlNodeKind};
 use crate::ir::{
     ControlKind, ExecutionMode, IrNode, NodeKind, SceneIr, SourceRef,
 };
@@ -63,20 +63,14 @@ pub fn extract_ir(
         });
     }
 
-    // Index LaidOutNodes by html_node id for O(1) lookup.
     let node_map: HashMap<usize, &LaidOutNode> =
         laid_out.nodes.iter().map(|n| (n.node.id, n)).collect();
 
-    // Invisible tag ids and all their descendants are skipped.
     let mut skipped_ids: HashSet<usize> = HashSet::new();
-
-    // Maps html_node id → assigned IR id ("n0", "n1", …) for parent linking.
     let mut html_to_ir_id: HashMap<usize, String> = HashMap::new();
-
     let mut ir_nodes: Vec<IrNode> = Vec::new();
 
     for html_node in &graph.html_nodes {
-        // Propagate skip to descendants.
         if let Some(pid) = html_node.parent_id
             && skipped_ids.contains(&pid)
         {
@@ -86,101 +80,25 @@ pub fn extract_ir(
 
         match html_node.kind {
             HtmlNodeKind::Document => continue,
-
             HtmlNodeKind::Element => {
-                let tag = html_node.name.as_deref().unwrap_or("");
-                if INVISIBLE_TAGS.contains(&tag) {
-                    skipped_ids.insert(html_node.id);
-                    continue;
-                }
-
-                // Transparent: pass the parent's IR id through to children.
-                if TRANSPARENT_TAGS.contains(&tag) {
-                    if let Some(pir) = html_node
-                        .parent_id
-                        .and_then(|pid| html_to_ir_id.get(&pid))
-                        .cloned()
-                    {
-                        html_to_ir_id.insert(html_node.id, pir);
-                    }
-                    continue;
-                }
-
-                let Some(lo) = node_map.get(&html_node.id) else {
-                    // Element was not resolved (shouldn't happen in well-formed
-                    // scenes, but skip rather than panic).
-                    continue;
-                };
-
-                let ir_id = format!("n{}", ir_nodes.len());
-                html_to_ir_id.insert(html_node.id, ir_id.clone());
-
-                let parent_ir_id = html_node
-                    .parent_id
-                    .and_then(|pid| html_to_ir_id.get(&pid))
-                    .cloned();
-
-                let (kind, control_kind) = element_kind(tag);
-
-                ir_nodes.push(IrNode {
-                    id: ir_id,
-                    kind,
-                    parent_id: parent_ir_id,
-                    control_kind,
-                    text_content: None,
-                    layout: map::to_layout(&lo.style, &lo.geometry),
-                    paint: map::to_paint(&lo.style),
-                    typography: map::to_typography(&lo.style),
-                    source: SourceRef {
-                        doc_id: html_node.document_id,
-                        dom_path: html_node.dom_path.clone(),
-                        span: None,
-                    },
-                });
+                process_element(
+                    html_node,
+                    &node_map,
+                    &mut html_to_ir_id,
+                    &mut ir_nodes,
+                    &mut skipped_ids,
+                );
             }
-
             HtmlNodeKind::Text => {
-                let text = match &html_node.text {
-                    Some(t) => t.trim().to_owned(),
-                    None => continue,
-                };
-                if text.is_empty() {
-                    continue;
+                if let Some(node) = process_text(
+                    html_node,
+                    &node_map,
+                    &html_to_ir_id,
+                    ir_nodes.len(),
+                    &skipped_ids,
+                ) {
+                    ir_nodes.push(node);
                 }
-
-                // Check parent is not in the skip set.
-                let parent_id = match html_node.parent_id {
-                    Some(pid) if !skipped_ids.contains(&pid) => pid,
-                    _ => continue,
-                };
-
-                let parent_ir_id = match html_to_ir_id.get(&parent_id) {
-                    Some(id) => id.clone(),
-                    None => continue,
-                };
-
-                // Inherit typography from the parent element's style.
-                let typography = node_map
-                    .get(&parent_id)
-                    .and_then(|lo| map::to_typography(&lo.style));
-
-                let ir_id = format!("n{}", ir_nodes.len());
-
-                ir_nodes.push(IrNode {
-                    id: ir_id,
-                    kind: NodeKind::Text,
-                    parent_id: Some(parent_ir_id),
-                    control_kind: None,
-                    text_content: Some(text),
-                    layout: map::to_layout_default(),
-                    paint: map::to_paint_default(),
-                    typography,
-                    source: SourceRef {
-                        doc_id: html_node.document_id,
-                        dom_path: html_node.dom_path.clone(),
-                        span: None,
-                    },
-                });
             }
         }
     }
@@ -191,6 +109,99 @@ pub fn extract_ir(
         corpus: "v0.1".to_owned(),
         execution_mode: ExecutionMode::Static,
         nodes: ir_nodes,
+    })
+}
+
+fn process_element(
+    html_node: &HtmlNode,
+    node_map: &HashMap<usize, &LaidOutNode>,
+    html_to_ir_id: &mut HashMap<usize, String>,
+    ir_nodes: &mut Vec<IrNode>,
+    skipped_ids: &mut HashSet<usize>,
+) {
+    let tag = html_node.name.as_deref().unwrap_or("");
+    if INVISIBLE_TAGS.contains(&tag) {
+        skipped_ids.insert(html_node.id);
+        return;
+    }
+
+    if TRANSPARENT_TAGS.contains(&tag) {
+        if let Some(pir) = html_node
+            .parent_id
+            .and_then(|pid| html_to_ir_id.get(&pid))
+            .cloned()
+        {
+            html_to_ir_id.insert(html_node.id, pir);
+        }
+        return;
+    }
+
+    let Some(lo) = node_map.get(&html_node.id) else { return; };
+
+    let ir_id = format!("n{}", ir_nodes.len());
+    html_to_ir_id.insert(html_node.id, ir_id.clone());
+
+    let parent_ir_id = html_node
+        .parent_id
+        .and_then(|pid| html_to_ir_id.get(&pid))
+        .cloned();
+
+    let (kind, control_kind) = element_kind(tag);
+
+    ir_nodes.push(IrNode {
+        id: ir_id,
+        kind,
+        parent_id: parent_ir_id,
+        control_kind,
+        text_content: None,
+        layout: map::to_layout(&lo.style, &lo.geometry),
+        paint: map::to_paint(&lo.style),
+        typography: map::to_typography(&lo.style),
+        source: SourceRef {
+            doc_id: html_node.document_id,
+            dom_path: html_node.dom_path.clone(),
+            span: None,
+        },
+    });
+}
+
+fn process_text(
+    html_node: &HtmlNode,
+    node_map: &HashMap<usize, &LaidOutNode>,
+    html_to_ir_id: &HashMap<usize, String>,
+    next_id: usize,
+    skipped_ids: &HashSet<usize>,
+) -> Option<IrNode> {
+    let text = html_node.text.as_ref()?.trim().to_owned();
+    if text.is_empty() {
+        return None;
+    }
+
+    let parent_id = match html_node.parent_id {
+        Some(pid) if !skipped_ids.contains(&pid) => pid,
+        _ => return None,
+    };
+
+    let parent_ir_id = html_to_ir_id.get(&parent_id)?.clone();
+
+    let typography = node_map
+        .get(&parent_id)
+        .and_then(|lo| map::to_typography(&lo.style));
+
+    Some(IrNode {
+        id: format!("n{next_id}"),
+        kind: NodeKind::Text,
+        parent_id: Some(parent_ir_id),
+        control_kind: None,
+        text_content: Some(text),
+        layout: map::to_layout_default(),
+        paint: map::to_paint_default(),
+        typography,
+        source: SourceRef {
+            doc_id: html_node.document_id,
+            dom_path: html_node.dom_path.clone(),
+            span: None,
+        },
     })
 }
 

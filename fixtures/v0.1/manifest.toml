@@ -55,3 +55,14 @@ expected_semui = "typography_specimen/expected/scene.semui.json"
 expected_roundtrip_html = "typography_specimen/expected/roundtrip.html"
 expected_roundtrip_css = "typography_specimen/expected/roundtrip.css"
 tags = ["typography", "text", "weights", "line-height", "colors"]
+
+[[scene]]
+id = "update_toast"
+priority = 6
+dir = "update_toast"
+source_html = "update_toast/source.html"
+source_css = "update_toast/source.css"
+expected_semui = "update_toast/expected/scene.semui.json"
+expected_roundtrip_html = "update_toast/expected/roundtrip.html"
+expected_roundtrip_css = "update_toast/expected/roundtrip.css"
+tags = ["toast", "flex-column", "absolute", "badge", "button", "typography"]
