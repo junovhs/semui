@@ -1,4 +1,7 @@
 mod fixture_manifest;
+pub mod ir;
+pub mod layout;
+pub mod resolver;
 mod source_graph;
 
 pub use fixture_manifest::{
