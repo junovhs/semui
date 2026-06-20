@@ -7,8 +7,8 @@
 #[cfg(test)]
 mod tests;
 
-use crate::source_graph::SceneSourceGraph;
 use crate::CssRule;
+use crate::source_graph::SceneSourceGraph;
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -122,16 +122,41 @@ fn is_unsupported_selector(selector: &str) -> bool {
 // ---------------------------------------------------------------------------
 
 const KNOWN_PROPERTIES: &[&str] = &[
-    "margin", "padding", "background", "border",
-    "position", "display", "box-sizing",
-    "top", "left", "width", "height", "min-width",
-    "margin-top", "margin-right", "margin-bottom", "margin-left",
-    "padding-top", "padding-right", "padding-bottom", "padding-left",
-    "border-width", "border-color", "border-radius",
+    "margin",
+    "padding",
+    "background",
+    "border",
+    "position",
+    "display",
+    "box-sizing",
+    "top",
+    "left",
+    "width",
+    "height",
+    "min-width",
+    "margin-top",
+    "margin-right",
+    "margin-bottom",
+    "margin-left",
+    "padding-top",
+    "padding-right",
+    "padding-bottom",
+    "padding-left",
+    "border-width",
+    "border-color",
+    "border-radius",
     "background-color",
-    "flex-direction", "align-items", "justify-content", "align-self", "gap",
+    "flex-direction",
+    "align-items",
+    "justify-content",
+    "align-self",
+    "gap",
     "cursor",
-    "color", "font-family", "font-size", "font-weight", "line-height",
+    "color",
+    "font-family",
+    "font-size",
+    "font-weight",
+    "line-height",
 ];
 
 fn is_known_property(property: &str) -> bool {

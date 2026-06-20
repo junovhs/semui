@@ -1,6 +1,6 @@
 use crate::HtmlNode;
 use crate::HtmlNodeKind;
-use crate::resolver::selector::{selector_matches, specificity, Specificity};
+use crate::resolver::selector::{Specificity, selector_matches, specificity};
 
 fn el(name: &str, class: &str) -> HtmlNode {
     let mut attributes = Vec::new();

@@ -20,7 +20,11 @@ pub fn load_scene_source_graph(
     repo_root: impl AsRef<Path>,
     scene_id: &str,
 ) -> Result<SceneSourceGraph, SourceGraphError> {
-    let manifest_path = repo_root.as_ref().join("fixtures").join("v0.1").join("manifest.toml");
+    let manifest_path = repo_root
+        .as_ref()
+        .join("fixtures")
+        .join("v0.1")
+        .join("manifest.toml");
     let manifest = load_fixture_manifest(&manifest_path)?;
     let scene = manifest.scene(scene_id)?;
     SceneSourceGraph::load(scene)
@@ -35,7 +39,8 @@ impl SceneSourceGraph {
         css_str: &str,
     ) -> Result<Self, SourceGraphError> {
         use std::path::PathBuf;
-        let html = SourceDocument::new_html(0, PathBuf::from("<emitted-html>"), html_str.to_owned());
+        let html =
+            SourceDocument::new_html(0, PathBuf::from("<emitted-html>"), html_str.to_owned());
         let css = SourceDocument::new_css(1, PathBuf::from("<emitted-css>"), css_str.to_owned());
         let html_nodes = parse_html_document(html.id, &html.contents)?;
         let css_rules = parse_css_document(css.id, &css.contents)?;

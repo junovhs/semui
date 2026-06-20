@@ -126,15 +126,32 @@ pub fn parse_color(value: &str) -> Option<String> {
 // ---------------------------------------------------------------------------
 
 fn expand_edges(top: &mut f32, right: &mut f32, bottom: &mut f32, left: &mut f32, value: &str) {
-    let parts: Vec<f32> = value
-        .split_whitespace()
-        .filter_map(parse_px)
-        .collect();
+    let parts: Vec<f32> = value.split_whitespace().filter_map(parse_px).collect();
     match parts.as_slice() {
-        [all] => { *top = *all; *right = *all; *bottom = *all; *left = *all; }
-        [tb, lr] => { *top = *tb; *right = *lr; *bottom = *tb; *left = *lr; }
-        [t, lr, b] => { *top = *t; *right = *lr; *bottom = *b; *left = *lr; }
-        [t, r, b, l] => { *top = *t; *right = *r; *bottom = *b; *left = *l; }
+        [all] => {
+            *top = *all;
+            *right = *all;
+            *bottom = *all;
+            *left = *all;
+        }
+        [tb, lr] => {
+            *top = *tb;
+            *right = *lr;
+            *bottom = *tb;
+            *left = *lr;
+        }
+        [t, lr, b] => {
+            *top = *t;
+            *right = *lr;
+            *bottom = *b;
+            *left = *lr;
+        }
+        [t, r, b, l] => {
+            *top = *t;
+            *right = *r;
+            *bottom = *b;
+            *left = *l;
+        }
         _ => {}
     }
 }

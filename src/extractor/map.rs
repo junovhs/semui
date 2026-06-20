@@ -23,7 +23,10 @@ pub fn to_layout(style: &ComputedStyle, geo: &Geometry) -> Layout {
         padding: edge(&geo.padding),
         flex_direction: style.flex_direction.as_deref().and_then(to_flex_direction),
         align_items: style.align_items.as_deref().and_then(to_align_items),
-        justify_content: style.justify_content.as_deref().and_then(to_justify_content),
+        justify_content: style
+            .justify_content
+            .as_deref()
+            .and_then(to_justify_content),
         align_self: style.align_self.as_deref().and_then(to_align_self),
         gap: style.gap,
     }
@@ -95,11 +98,19 @@ fn to_flex_direction(s: &str) -> Option<FlexDirection> {
 }
 
 fn to_align_items(s: &str) -> Option<AlignItems> {
-    if s == "center" { Some(AlignItems::Center) } else { None }
+    if s == "center" {
+        Some(AlignItems::Center)
+    } else {
+        None
+    }
 }
 
 fn to_justify_content(s: &str) -> Option<JustifyContent> {
-    if s == "center" { Some(JustifyContent::Center) } else { None }
+    if s == "center" {
+        Some(JustifyContent::Center)
+    } else {
+        None
+    }
 }
 
 fn to_align_self(s: &str) -> Option<AlignSelf> {

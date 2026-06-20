@@ -10,12 +10,10 @@ mod tests;
 
 use std::collections::{HashMap, HashSet};
 
-use crate::{HtmlNode, HtmlNodeKind};
-use crate::ir::{
-    ControlKind, ExecutionMode, IrNode, NodeKind, SceneIr, SourceRef,
-};
+use crate::ir::{ControlKind, ExecutionMode, IrNode, NodeKind, SceneIr, SourceRef};
 use crate::layout::{LaidOutNode, LaidOutScene};
 use crate::source_graph::SceneSourceGraph;
+use crate::{HtmlNode, HtmlNodeKind};
 
 /// Tags that are invisible structural boilerplate — skipped entirely along
 /// with all of their descendants.
@@ -136,7 +134,9 @@ fn process_element(
         return;
     }
 
-    let Some(lo) = node_map.get(&html_node.id) else { return; };
+    let Some(lo) = node_map.get(&html_node.id) else {
+        return;
+    };
 
     let ir_id = format!("n{}", ir_nodes.len());
     html_to_ir_id.insert(html_node.id, ir_id.clone());

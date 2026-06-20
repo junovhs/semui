@@ -124,7 +124,13 @@ fn compare_node(n1: &IrNode, n2: &IrNode, idx: usize, drift: &mut Vec<Drift>) {
 
     // Layout
     compare_opt_f32(n1.layout.width, n2.layout.width, idx, "layout.width", drift);
-    compare_opt_f32(n1.layout.height, n2.layout.height, idx, "layout.height", drift);
+    compare_opt_f32(
+        n1.layout.height,
+        n2.layout.height,
+        idx,
+        "layout.height",
+        drift,
+    );
     compare_opt_f32(n1.layout.top, n2.layout.top, idx, "layout.top", drift);
     compare_opt_f32(n1.layout.left, n2.layout.left, idx, "layout.left", drift);
 

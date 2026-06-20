@@ -6,7 +6,8 @@ Layout rules:
 
 - `manifest.toml` is the canonical machine-readable index
 - each scene lives in its own directory
-- each scene directory contains `source.html`, `source.css`, and `scene.toml`
+- each scene directory contains `source.html`, `source.css`, and expected artifacts
 - each scene reserves `expected/scene.semui.json`, `expected/roundtrip.html`, and `expected/roundtrip.css`
 
-The `expected/` files are placeholders until the IR schema, extraction pipeline, and emitter exist.
+The `expected/` files are checked-in regression artifacts. Verification must
+compare them without rewriting them.

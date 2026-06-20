@@ -1,7 +1,9 @@
 //! CSS generation from IR nodes.
 
-use crate::ir::layout::{AlignItems, AlignSelf, BoxSizing, Cursor, Display,
-    EdgeInset, FlexDirection, JustifyContent, Layout, Position};
+use crate::ir::layout::{
+    AlignItems, AlignSelf, BoxSizing, Cursor, Display, EdgeInset, FlexDirection, JustifyContent,
+    Layout, Position,
+};
 use crate::ir::paint::Paint;
 use crate::ir::typography::{LineHeight, Typography};
 use crate::ir::{IrNode, NodeKind};
@@ -33,7 +35,11 @@ fn emit_rule(node: &IrNode) -> Option<String> {
     if decls.is_empty() {
         return None;
     }
-    let body = decls.iter().map(|d| format!("  {d};")).collect::<Vec<_>>().join("\n");
+    let body = decls
+        .iter()
+        .map(|d| format!("  {d};"))
+        .collect::<Vec<_>>()
+        .join("\n");
     Some(format!(".{} {{\n{body}\n}}", node.id))
 }
 
@@ -50,13 +56,27 @@ fn layout_decls(l: &Layout) -> Vec<String> {
     if l.box_sizing == BoxSizing::BorderBox {
         d.push("box-sizing: border-box".to_owned());
     }
-    if let Some(v) = l.top    { d.push(format!("top: {}", px(v))); }
-    if let Some(v) = l.left   { d.push(format!("left: {}", px(v))); }
-    if let Some(v) = l.width  { d.push(format!("width: {}", px(v))); }
-    if let Some(v) = l.height { d.push(format!("height: {}", px(v))); }
-    if let Some(v) = l.min_width { d.push(format!("min-width: {}", px(v))); }
-    if let Some(s) = edge_shorthand("margin", &l.margin) { d.push(s); }
-    if let Some(s) = edge_shorthand("padding", &l.padding) { d.push(s); }
+    if let Some(v) = l.top {
+        d.push(format!("top: {}", px(v)));
+    }
+    if let Some(v) = l.left {
+        d.push(format!("left: {}", px(v)));
+    }
+    if let Some(v) = l.width {
+        d.push(format!("width: {}", px(v)));
+    }
+    if let Some(v) = l.height {
+        d.push(format!("height: {}", px(v)));
+    }
+    if let Some(v) = l.min_width {
+        d.push(format!("min-width: {}", px(v)));
+    }
+    if let Some(s) = edge_shorthand("margin", &l.margin) {
+        d.push(s);
+    }
+    if let Some(s) = edge_shorthand("padding", &l.padding) {
+        d.push(s);
+    }
     if let Some(ref fd) = l.flex_direction {
         d.push(format!("flex-direction: {}", flex_dir(fd)));
     }
@@ -69,7 +89,9 @@ fn layout_decls(l: &Layout) -> Vec<String> {
     if let Some(ref ase) = l.align_self {
         d.push(format!("align-self: {}", align_self_val(ase)));
     }
-    if let Some(v) = l.gap { d.push(format!("gap: {}", px(v))); }
+    if let Some(v) = l.gap {
+        d.push(format!("gap: {}", px(v)));
+    }
     d
 }
 
@@ -105,7 +127,11 @@ fn typography_decls(t: &Typography) -> Vec<String> {
 // ---------------------------------------------------------------------------
 
 pub fn px(v: f32) -> String {
-    if v.fract() == 0.0 { format!("{}px", v as i64) } else { format!("{v}px") }
+    if v.fract() == 0.0 {
+        format!("{}px", v as i64)
+    } else {
+        format!("{v}px")
+    }
 }
 
 fn edge_shorthand(name: &str, e: &EdgeInset) -> Option<String> {
@@ -117,29 +143,48 @@ fn edge_shorthand(name: &str, e: &EdgeInset) -> Option<String> {
     } else if e.top == e.bottom && e.left == e.right {
         format!("{name}: {} {}", px(e.top), px(e.right))
     } else {
-        format!("{name}: {} {} {} {}", px(e.top), px(e.right), px(e.bottom), px(e.left))
+        format!(
+            "{name}: {} {} {} {}",
+            px(e.top),
+            px(e.right),
+            px(e.bottom),
+            px(e.left)
+        )
     };
     Some(s)
 }
 
 fn flex_dir(fd: &FlexDirection) -> &'static str {
-    match fd { FlexDirection::Row => "row", FlexDirection::Column => "column" }
+    match fd {
+        FlexDirection::Row => "row",
+        FlexDirection::Column => "column",
+    }
 }
 
 fn align_items_val(ai: &AlignItems) -> &'static str {
-    match ai { AlignItems::Center => "center" }
+    match ai {
+        AlignItems::Center => "center",
+    }
 }
 
 fn justify_val(jc: &JustifyContent) -> &'static str {
-    match jc { JustifyContent::Center => "center" }
+    match jc {
+        JustifyContent::Center => "center",
+    }
 }
 
 fn align_self_val(ase: &AlignSelf) -> &'static str {
-    match ase { AlignSelf::Auto => "auto", AlignSelf::FlexStart => "flex-start" }
+    match ase {
+        AlignSelf::Auto => "auto",
+        AlignSelf::FlexStart => "flex-start",
+    }
 }
 
 fn cursor_val(c: &Cursor) -> &'static str {
-    match c { Cursor::Auto => "auto", Cursor::Pointer => "pointer" }
+    match c {
+        Cursor::Auto => "auto",
+        Cursor::Pointer => "pointer",
+    }
 }
 
 fn line_height_val(lh: &LineHeight) -> String {

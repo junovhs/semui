@@ -18,11 +18,7 @@ fn repo_root() -> PathBuf {
 fn all_v01_scenes_pass_round_trip() -> Result<(), Box<dyn std::error::Error>> {
     let proof = run_corpus_proof(repo_root())?;
 
-    let failures: Vec<_> = proof
-        .scenes
-        .iter()
-        .filter(|s| !s.round_trip_pass)
-        .collect();
+    let failures: Vec<_> = proof.scenes.iter().filter(|s| !s.round_trip_pass).collect();
 
     assert!(
         failures.is_empty(),
@@ -42,9 +38,13 @@ fn all_v01_scenes_pass_round_trip() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Corpus must cover all 6 scenes defined in the manifest.
 #[test]
-fn corpus_proof_covers_all_five_scenes() -> Result<(), Box<dyn std::error::Error>> {
+fn corpus_proof_covers_all_six_scenes() -> Result<(), Box<dyn std::error::Error>> {
     let proof = run_corpus_proof(repo_root())?;
-    assert_eq!(proof.scenes.len(), 6, "expected 6 scenes in the v0.1 corpus");
+    assert_eq!(
+        proof.scenes.len(),
+        6,
+        "expected 6 scenes in the v0.1 corpus"
+    );
     Ok(())
 }
 
@@ -96,7 +96,12 @@ fn supported_subset_includes_core_properties() {
     use std::path::PathBuf;
 
     fn zero_span() -> TraceSpan {
-        TraceSpan { start: 0, end: 0, line: 1, column: 1 }
+        TraceSpan {
+            start: 0,
+            end: 0,
+            line: 1,
+            column: 1,
+        }
     }
 
     // Check that a rule with only core properties produces no diagnostics.

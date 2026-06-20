@@ -1,13 +1,18 @@
 //! Unit tests for the diagnostics analysis logic.
 
-use crate::diagnostics::{analyze, DiagnosticKind};
+use crate::diagnostics::{DiagnosticKind, analyze};
 use crate::source_graph::{
     CssDeclaration, CssRule, SceneSourceGraph, SourceDocument, SourceDocumentKind, TraceSpan,
 };
 use std::path::PathBuf;
 
 fn zero_span() -> TraceSpan {
-    TraceSpan { start: 0, end: 0, line: 1, column: 1 }
+    TraceSpan {
+        start: 0,
+        end: 0,
+        line: 1,
+        column: 1,
+    }
 }
 
 fn decl(property: &str, value: &str) -> CssDeclaration {
@@ -127,7 +132,9 @@ fn id_selector_produces_unsupported_selector_diagnostic() {
     let graph = fake_graph(vec![rule(0, &["#main"], &[("display", "flex")])]);
     let diags = analyze(&graph);
     assert!(
-        diags.iter().any(|d| d.kind == DiagnosticKind::UnsupportedSelector),
+        diags
+            .iter()
+            .any(|d| d.kind == DiagnosticKind::UnsupportedSelector),
         "diags={diags:?}"
     );
 }
@@ -137,7 +144,9 @@ fn pseudo_class_produces_unsupported_selector_diagnostic() {
     let graph = fake_graph(vec![rule(0, &["a:hover"], &[("color", "#000")])]);
     let diags = analyze(&graph);
     assert!(
-        diags.iter().any(|d| d.kind == DiagnosticKind::UnsupportedSelector),
+        diags
+            .iter()
+            .any(|d| d.kind == DiagnosticKind::UnsupportedSelector),
         "diags={diags:?}"
     );
 }
@@ -147,17 +156,25 @@ fn descendant_combinator_produces_unsupported_selector_diagnostic() {
     let graph = fake_graph(vec![rule(0, &["div span"], &[("color", "#000")])]);
     let diags = analyze(&graph);
     assert!(
-        diags.iter().any(|d| d.kind == DiagnosticKind::UnsupportedSelector),
+        diags
+            .iter()
+            .any(|d| d.kind == DiagnosticKind::UnsupportedSelector),
         "diags={diags:?}"
     );
 }
 
 #[test]
 fn attribute_selector_produces_unsupported_selector_diagnostic() {
-    let graph = fake_graph(vec![rule(0, &["input[type=\"text\"]"], &[("color", "#000")])]);
+    let graph = fake_graph(vec![rule(
+        0,
+        &["input[type=\"text\"]"],
+        &[("color", "#000")],
+    )]);
     let diags = analyze(&graph);
     assert!(
-        diags.iter().any(|d| d.kind == DiagnosticKind::UnsupportedSelector),
+        diags
+            .iter()
+            .any(|d| d.kind == DiagnosticKind::UnsupportedSelector),
         "diags={diags:?}"
     );
 }

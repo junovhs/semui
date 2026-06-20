@@ -1,11 +1,11 @@
-mod fixture_manifest;
 pub mod diagnostics;
 pub mod emitter;
 pub mod extractor;
+mod fixture_manifest;
 pub mod ir;
 pub mod layout;
-pub mod resolver;
 pub mod release;
+pub mod resolver;
 mod source_graph;
 pub mod verification;
 

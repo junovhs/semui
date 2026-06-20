@@ -69,4 +69,3 @@ fn escape_html(s: &str) -> String {
     }
     out
 }
-

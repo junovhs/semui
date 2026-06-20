@@ -1,12 +1,12 @@
 //! Unit tests for the mapping layer (map.rs).
 
-use crate::extractor::map;
-use crate::ir::typography::LineHeight as TLineHeight;
-use crate::resolver::ComputedStyle;
-use crate::layout::{LaidOutScene, compute_layout};
-use crate::resolver::{ResolvedNode, ResolvedScene};
 use crate::HtmlNode;
 use crate::HtmlNodeKind;
+use crate::extractor::map;
+use crate::ir::typography::LineHeight as TLineHeight;
+use crate::layout::{LaidOutScene, compute_layout};
+use crate::resolver::ComputedStyle;
+use crate::resolver::{ResolvedNode, ResolvedScene};
 
 fn elem(id: usize) -> HtmlNode {
     HtmlNode {
@@ -24,7 +24,10 @@ fn elem(id: usize) -> HtmlNode {
 fn laid_out_single(style: ComputedStyle) -> LaidOutScene {
     let scene = ResolvedScene {
         scene_id: "test".to_owned(),
-        nodes: vec![ResolvedNode { node: elem(0), style }],
+        nodes: vec![ResolvedNode {
+            node: elem(0),
+            style,
+        }],
     };
     compute_layout(&scene)
 }
@@ -75,9 +78,15 @@ fn to_paint_border_emitted_when_width_nonzero() {
         ..ComputedStyle::default()
     };
     let paint = map::to_paint(&style);
-    assert!(paint.border.is_some(), "border should be Some when width > 0");
-    assert_eq!(paint.border.as_ref().map(|b| b.width),        Some(2.0));
-    assert_eq!(paint.border.as_ref().map(|b| b.color.0.as_str()), Some("#ff0000"));
+    assert!(
+        paint.border.is_some(),
+        "border should be Some when width > 0"
+    );
+    assert_eq!(paint.border.as_ref().map(|b| b.width), Some(2.0));
+    assert_eq!(
+        paint.border.as_ref().map(|b| b.color.0.as_str()),
+        Some("#ff0000")
+    );
 }
 
 #[test]
@@ -100,7 +109,10 @@ fn to_paint_border_radius_only_when_nonzero() {
     let paint = map::to_paint(&style);
     assert_eq!(paint.border_radius, Some(8.0));
 
-    let style2 = ComputedStyle { border_radius: 0.0, ..ComputedStyle::default() };
+    let style2 = ComputedStyle {
+        border_radius: 0.0,
+        ..ComputedStyle::default()
+    };
     let paint2 = map::to_paint(&style2);
     assert!(paint2.border_radius.is_none());
 }
@@ -147,7 +159,10 @@ fn to_typography_line_height_px_parsed() {
     };
     let typo = map::to_typography(&style);
     assert!(typo.is_some(), "typography should resolve");
-    assert_eq!(typo.map(|t| t.line_height), Some(TLineHeight::Length { value: 24.0 }));
+    assert_eq!(
+        typo.map(|t| t.line_height),
+        Some(TLineHeight::Length { value: 24.0 })
+    );
 }
 
 #[test]
@@ -161,5 +176,8 @@ fn to_typography_font_family_split_on_comma() {
     };
     let typo = map::to_typography(&style);
     assert!(typo.is_some(), "typography should resolve");
-    assert_eq!(typo.map(|t| t.font_family), Some(vec!["Inter".to_owned(), "sans-serif".to_owned()]));
+    assert_eq!(
+        typo.map(|t| t.font_family),
+        Some(vec!["Inter".to_owned(), "sans-serif".to_owned()])
+    );
 }

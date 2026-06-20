@@ -50,10 +50,7 @@ pub fn parse_start_tag(tag_body: &str, offset: usize) -> Result<StartTag, Source
     })
 }
 
-fn parse_attributes(
-    input: &str,
-    offset: usize,
-) -> Result<Vec<(String, String)>, SourceGraphError> {
+fn parse_attributes(input: &str, offset: usize) -> Result<Vec<(String, String)>, SourceGraphError> {
     let mut attributes = Vec::new();
     let mut index = 0;
 

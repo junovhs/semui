@@ -29,11 +29,20 @@ fn default_layout() -> Layout {
 }
 
 fn default_paint() -> Paint {
-    Paint { background_color: None, border: None, border_radius: None, cursor: None }
+    Paint {
+        background_color: None,
+        border: None,
+        border_radius: None,
+        cursor: None,
+    }
 }
 
 fn source_ref() -> SourceRef {
-    SourceRef { doc_id: 0, dom_path: "0/1".to_owned(), span: None }
+    SourceRef {
+        doc_id: 0,
+        dom_path: "0/1".to_owned(),
+        span: None,
+    }
 }
 
 fn control_node(id: &str) -> IrNode {
@@ -78,13 +87,19 @@ fn button_appearance_none_precedes_other_decls() {
     node.paint.background_color = Some(Color("#2563eb".to_owned()));
     let css = build_css(&[node]);
     let app = css.find("appearance: none");
-    let bg  = css.find("background-color");
-    assert!(app.is_some() && app < bg, "appearance: none must precede background-color: {css}");
+    let bg = css.find("background-color");
+    assert!(
+        app.is_some() && app < bg,
+        "appearance: none must precede background-color: {css}"
+    );
 }
 
 #[test]
 fn box_node_does_not_emit_appearance_none() {
-    let layout = Layout { width: Some(100.0), ..default_layout() };
+    let layout = Layout {
+        width: Some(100.0),
+        ..default_layout()
+    };
     let css = build_css(&[box_node("n0", layout, default_paint())]);
     assert!(!css.contains("appearance"), "css={css}");
 }
@@ -126,14 +141,20 @@ fn static_position_not_emitted() {
 
 #[test]
 fn flex_display_emitted() {
-    let layout = Layout { display: Display::Flex, ..default_layout() };
+    let layout = Layout {
+        display: Display::Flex,
+        ..default_layout()
+    };
     let css = build_css(&[box_node("n0", layout, default_paint())]);
     assert!(css.contains("display: flex"), "css={css}");
 }
 
 #[test]
 fn border_box_emitted() {
-    let layout = Layout { box_sizing: BoxSizing::BorderBox, ..default_layout() };
+    let layout = Layout {
+        box_sizing: BoxSizing::BorderBox,
+        ..default_layout()
+    };
     let css = build_css(&[box_node("n0", layout, default_paint())]);
     assert!(css.contains("box-sizing: border-box"), "css={css}");
 }
@@ -141,7 +162,10 @@ fn border_box_emitted() {
 #[test]
 fn zero_margin_not_emitted() {
     let css = build_css(&[box_node("n0", default_layout(), default_paint())]);
-    assert!(!css.contains("margin"), "zero margin must not appear: css={css}");
+    assert!(
+        !css.contains("margin"),
+        "zero margin must not appear: css={css}"
+    );
 }
 
 #[test]
@@ -159,7 +183,12 @@ fn uniform_padding_uses_shorthand() {
 #[test]
 fn asymmetric_margin_uses_four_value_shorthand() {
     let layout = Layout {
-        margin: EdgeInset { top: 4.0, right: 8.0, bottom: 12.0, left: 16.0 },
+        margin: EdgeInset {
+            top: 4.0,
+            right: 8.0,
+            bottom: 12.0,
+            left: 16.0,
+        },
         ..default_layout()
     };
     let css = build_css(&[box_node("n0", layout, default_paint())]);
@@ -169,7 +198,10 @@ fn asymmetric_margin_uses_four_value_shorthand() {
 #[test]
 fn border_emits_shorthand() {
     let paint = Paint {
-        border: Some(Border { width: 1.0, color: Color("#ff0000".to_owned()) }),
+        border: Some(Border {
+            width: 1.0,
+            color: Color("#ff0000".to_owned()),
+        }),
         ..default_paint()
     };
     let css = build_css(&[box_node("n0", default_layout(), paint)]);
@@ -239,7 +271,10 @@ fn empty_rule_is_omitted() {
     // A node with all defaults (static, block, content-box, no paint, no typo)
     // has nothing to emit → the CSS output should be empty.
     let css = build_css(&[box_node("n0", default_layout(), default_paint())]);
-    assert!(css.is_empty(), "all-default node must produce no CSS: css={css}");
+    assert!(
+        css.is_empty(),
+        "all-default node must produce no CSS: css={css}"
+    );
 }
 
 #[test]

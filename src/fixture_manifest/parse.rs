@@ -115,16 +115,22 @@ impl SceneBuilder {
             "id" => self.id = Some(parse_string(value, line_number)?),
             "priority" => self.priority = Some(parse_u32(value, line_number)?),
             "dir" => self.dir = Some(PathBuf::from(parse_string(value, line_number)?)),
-            "source_html" => self.source_html = Some(PathBuf::from(parse_string(value, line_number)?)),
-            "source_css" => self.source_css = Some(PathBuf::from(parse_string(value, line_number)?)),
+            "source_html" => {
+                self.source_html = Some(PathBuf::from(parse_string(value, line_number)?))
+            }
+            "source_css" => {
+                self.source_css = Some(PathBuf::from(parse_string(value, line_number)?))
+            }
             "expected_semui" => {
                 self.expected_semui = Some(PathBuf::from(parse_string(value, line_number)?));
             }
             "expected_roundtrip_html" => {
-                self.expected_roundtrip_html = Some(PathBuf::from(parse_string(value, line_number)?));
+                self.expected_roundtrip_html =
+                    Some(PathBuf::from(parse_string(value, line_number)?));
             }
             "expected_roundtrip_css" => {
-                self.expected_roundtrip_css = Some(PathBuf::from(parse_string(value, line_number)?));
+                self.expected_roundtrip_css =
+                    Some(PathBuf::from(parse_string(value, line_number)?));
             }
             "tags" => self.tags = Some(parse_string_array(value, line_number)?),
             _ => {
@@ -160,10 +166,7 @@ impl SceneBuilder {
     }
 }
 
-fn split_key_value(
-    line: &str,
-    line_number: usize,
-) -> Result<(&str, &str), FixtureManifestError> {
+fn split_key_value(line: &str, line_number: usize) -> Result<(&str, &str), FixtureManifestError> {
     let Some(index) = line.find('=') else {
         return Err(parse_error(
             line_number,

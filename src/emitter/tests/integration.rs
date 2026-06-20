@@ -46,7 +46,10 @@ fn emitted_html_references_stylesheet() -> Result<(), Box<dyn std::error::Error>
 #[test]
 fn emitted_html_contains_button_element() -> Result<(), Box<dyn std::error::Error>> {
     let scene = emit_profile_card()?;
-    assert!(scene.html.contains("<button"), "html should contain a button");
+    assert!(
+        scene.html.contains("<button"),
+        "html should contain a button"
+    );
     Ok(())
 }
 

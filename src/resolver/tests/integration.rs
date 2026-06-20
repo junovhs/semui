@@ -15,7 +15,10 @@ fn profile_card_absolute_resolves_without_error() -> Result<(), Box<dyn std::err
     let graph = load_scene_source_graph(repo_root(), "profile_card_absolute")?;
     let scene = resolve_scene(&graph)?;
     assert_eq!(scene.scene_id, "profile_card_absolute");
-    assert!(!scene.nodes.is_empty(), "resolved scene must have element nodes");
+    assert!(
+        !scene.nodes.is_empty(),
+        "resolved scene must have element nodes"
+    );
     Ok(())
 }
 
@@ -25,7 +28,10 @@ fn profile_card_card_has_absolute_position() -> Result<(), Box<dyn std::error::E
     let scene = resolve_scene(&graph)?;
 
     let Some(card) = scene.nodes.iter().find(|n| {
-        n.node.attributes.iter().any(|(k, v)| k == "class" && v.contains("profile-card"))
+        n.node
+            .attributes
+            .iter()
+            .any(|(k, v)| k == "class" && v.contains("profile-card"))
     }) else {
         return Err("profile-card element not found in resolved scene".into());
     };
@@ -47,7 +53,10 @@ fn cascade_specificity_button_primary_wins_over_button() -> Result<(), Box<dyn s
     // .button.primary has specificity (2,0); it overrides .button specificity (1,0)
     let Some(primary) = scene.nodes.iter().find(|n| {
         n.node.name.as_deref() == Some("button")
-            && n.node.attributes.iter().any(|(k, v)| k == "class" && v.contains("primary"))
+            && n.node
+                .attributes
+                .iter()
+                .any(|(k, v)| k == "class" && v.contains("primary"))
     }) else {
         return Err("primary button not found".into());
     };
@@ -56,7 +65,10 @@ fn cascade_specificity_button_primary_wins_over_button() -> Result<(), Box<dyn s
 
     let Some(secondary) = scene.nodes.iter().find(|n| {
         n.node.name.as_deref() == Some("button")
-            && n.node.attributes.iter().any(|(k, v)| k == "class" && v.contains("secondary"))
+            && n.node
+                .attributes
+                .iter()
+                .any(|(k, v)| k == "class" && v.contains("secondary"))
     }) else {
         return Err("secondary button not found".into());
     };
@@ -74,7 +86,10 @@ fn font_family_inherits_from_body_to_children() -> Result<(), Box<dyn std::error
     // .button sets font-family: inherit → inherits from ancestor body
     let Some(primary) = scene.nodes.iter().find(|n| {
         n.node.name.as_deref() == Some("button")
-            && n.node.attributes.iter().any(|(k, v)| k == "class" && v.contains("primary"))
+            && n.node
+                .attributes
+                .iter()
+                .any(|(k, v)| k == "class" && v.contains("primary"))
     }) else {
         return Err("primary button not found".into());
     };
@@ -92,7 +107,10 @@ fn stacked_info_card_flex_properties_resolved() -> Result<(), Box<dyn std::error
     let scene = resolve_scene(&graph)?;
 
     let Some(card) = scene.nodes.iter().find(|n| {
-        n.node.attributes.iter().any(|(k, v)| k == "class" && v == "card")
+        n.node
+            .attributes
+            .iter()
+            .any(|(k, v)| k == "class" && v == "card")
     }) else {
         return Err("card element not found".into());
     };

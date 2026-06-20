@@ -53,7 +53,12 @@ fn full_scene_round_trip_with_text_and_control() -> Result<(), serde_json::Error
                 source: SourceRef {
                     doc_id: 0,
                     dom_path: "body > div.row".to_string(),
-                    span: Some(SourceSpan { start: 0, end: 42, line: 1, column: 1 }),
+                    span: Some(SourceSpan {
+                        start: 0,
+                        end: 42,
+                        line: 1,
+                        column: 1,
+                    }),
                 },
             },
             IrNode {
@@ -72,7 +77,12 @@ fn full_scene_round_trip_with_text_and_control() -> Result<(), serde_json::Error
                     height: Some(32.0),
                     min_width: None,
                     margin: EdgeInset::zero(),
-                    padding: EdgeInset { top: 0.0, right: 16.0, bottom: 0.0, left: 16.0 },
+                    padding: EdgeInset {
+                        top: 0.0,
+                        right: 16.0,
+                        bottom: 0.0,
+                        left: 16.0,
+                    },
                     flex_direction: None,
                     align_items: Some(AlignItems::Center),
                     justify_content: Some(JustifyContent::Center),
@@ -81,7 +91,10 @@ fn full_scene_round_trip_with_text_and_control() -> Result<(), serde_json::Error
                 },
                 paint: Paint {
                     background_color: Some(Color("#0066cc".to_string())),
-                    border: Some(Border { width: 1.0, color: Color("#0055aa".to_string()) }),
+                    border: Some(Border {
+                        width: 1.0,
+                        color: Color("#0055aa".to_string()),
+                    }),
                     border_radius: Some(4.0),
                     cursor: Some(Cursor::Pointer),
                 },

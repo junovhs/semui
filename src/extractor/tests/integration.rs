@@ -3,7 +3,7 @@
 use std::path::PathBuf;
 
 use crate::extractor::extract_ir;
-use crate::ir::{NodeKind, ControlKind};
+use crate::ir::{ControlKind, NodeKind};
 use crate::layout::compute_layout;
 use crate::load_scene_source_graph;
 use crate::resolver::resolve_scene;
@@ -91,7 +91,11 @@ fn text_nodes_have_text_content_set() -> Result<(), Box<dyn std::error::Error>> 
     let laid_out = compute_layout(&resolved);
     let ir = extract_ir(&laid_out, &graph)?;
 
-    let text_nodes: Vec<_> = ir.nodes.iter().filter(|n| n.kind == NodeKind::Text).collect();
+    let text_nodes: Vec<_> = ir
+        .nodes
+        .iter()
+        .filter(|n| n.kind == NodeKind::Text)
+        .collect();
     assert!(
         !text_nodes.is_empty(),
         "profile_card_absolute should contain at least one text node"

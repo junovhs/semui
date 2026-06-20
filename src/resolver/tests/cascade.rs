@@ -71,7 +71,10 @@ fn apply_font_weight_parses_integer() {
 fn apply_inherit_is_skipped() {
     let mut s = ComputedStyle::default();
     apply_declaration(&mut s, "font-family", "inherit");
-    assert_eq!(s.font_family, None, "inherit must not set a value; inheritance handles it");
+    assert_eq!(
+        s.font_family, None,
+        "inherit must not set a value; inheritance handles it"
+    );
 }
 
 // --- apply_declaration: margin shorthand expansion ---
@@ -80,21 +83,35 @@ fn apply_inherit_is_skipped() {
 fn margin_one_value_sets_all_sides() {
     let mut s = ComputedStyle::default();
     apply_declaration(&mut s, "margin", "8px");
-    assert_eq!((s.margin_top, s.margin_right, s.margin_bottom, s.margin_left), (8.0, 8.0, 8.0, 8.0));
+    assert_eq!(
+        (s.margin_top, s.margin_right, s.margin_bottom, s.margin_left),
+        (8.0, 8.0, 8.0, 8.0)
+    );
 }
 
 #[test]
 fn margin_two_values_sets_tb_lr() {
     let mut s = ComputedStyle::default();
     apply_declaration(&mut s, "margin", "8px 16px");
-    assert_eq!((s.margin_top, s.margin_right, s.margin_bottom, s.margin_left), (8.0, 16.0, 8.0, 16.0));
+    assert_eq!(
+        (s.margin_top, s.margin_right, s.margin_bottom, s.margin_left),
+        (8.0, 16.0, 8.0, 16.0)
+    );
 }
 
 #[test]
 fn padding_four_values_set_individually() {
     let mut s = ComputedStyle::default();
     apply_declaration(&mut s, "padding", "4px 8px 12px 16px");
-    assert_eq!((s.padding_top, s.padding_right, s.padding_bottom, s.padding_left), (4.0, 8.0, 12.0, 16.0));
+    assert_eq!(
+        (
+            s.padding_top,
+            s.padding_right,
+            s.padding_bottom,
+            s.padding_left
+        ),
+        (4.0, 8.0, 12.0, 16.0)
+    );
 }
 
 // --- apply_declaration: border shorthand expansion ---
@@ -160,7 +177,11 @@ fn inheritance_does_not_overwrite_explicitly_set_value() {
         ..ComputedStyle::default()
     };
     apply_inheritance(&mut child, &parent);
-    assert_eq!(child.color, Some("#ffffff".to_owned()), "explicit child color must not be overwritten");
+    assert_eq!(
+        child.color,
+        Some("#ffffff".to_owned()),
+        "explicit child color must not be overwritten"
+    );
 }
 
 #[test]
@@ -173,7 +194,10 @@ fn inheritance_does_not_propagate_non_inherited_properties() {
     };
     let mut child = ComputedStyle::default();
     apply_inheritance(&mut child, &parent);
-    assert_eq!(child.background_color, None, "background-color must not inherit");
+    assert_eq!(
+        child.background_color, None,
+        "background-color must not inherit"
+    );
     assert_eq!(child.border_width, 0.0, "border-width must not inherit");
     assert_eq!(child.position, "static", "position must not inherit");
 }

@@ -19,10 +19,7 @@ fn parse_simple_selector(selector: &str) -> (Option<&str>, Vec<&str>) {
     let rest = &selector[first.len()..];
 
     let type_part = if first.is_empty() { None } else { Some(first) };
-    let class_parts: Vec<&str> = rest
-        .split('.')
-        .filter(|s| !s.is_empty())
-        .collect();
+    let class_parts: Vec<&str> = rest.split('.').filter(|s| !s.is_empty()).collect();
 
     (type_part, class_parts)
 }

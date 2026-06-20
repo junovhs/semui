@@ -1,7 +1,7 @@
-use crate::layout::compute_layout;
-use crate::resolver::{ComputedStyle, ResolvedNode, ResolvedScene};
 use crate::HtmlNode;
 use crate::HtmlNodeKind;
+use crate::layout::compute_layout;
+use crate::resolver::{ComputedStyle, ResolvedNode, ResolvedScene};
 
 fn elem(id: usize, name: &str) -> HtmlNode {
     HtmlNode {
@@ -19,7 +19,10 @@ fn elem(id: usize, name: &str) -> HtmlNode {
 fn scene_with(style: ComputedStyle) -> ResolvedScene {
     ResolvedScene {
         scene_id: "test".to_owned(),
-        nodes: vec![ResolvedNode { node: elem(0, "div"), style }],
+        nodes: vec![ResolvedNode {
+            node: elem(0, "div"),
+            style,
+        }],
     }
 }
 
@@ -53,8 +56,14 @@ fn static_position_has_no_explicit_coords() {
     };
     let scene = compute_layout(&scene_with(style));
     let g = &scene.nodes[0].geometry;
-    assert_eq!(g.explicit_x, None, "static elements must not produce explicit_x");
-    assert_eq!(g.explicit_y, None, "static elements must not produce explicit_y");
+    assert_eq!(
+        g.explicit_x, None,
+        "static elements must not produce explicit_x"
+    );
+    assert_eq!(
+        g.explicit_y, None,
+        "static elements must not produce explicit_y"
+    );
 }
 
 #[test]
@@ -107,7 +116,11 @@ fn content_box_passes_width_through_unchanged() {
     };
     let scene = compute_layout(&scene_with(style));
     let g = &scene.nodes[0].geometry;
-    assert_eq!(g.content_width, Some(200.0), "content-box: declared width is the content width");
+    assert_eq!(
+        g.content_width,
+        Some(200.0),
+        "content-box: declared width is the content width"
+    );
     assert_eq!(g.content_height, Some(100.0));
 }
 
@@ -123,7 +136,11 @@ fn border_box_clamped_to_zero_when_inset_exceeds_width() {
     };
     let scene = compute_layout(&scene_with(style));
     let g = &scene.nodes[0].geometry;
-    assert_eq!(g.content_width, Some(0.0), "content width must not go negative");
+    assert_eq!(
+        g.content_width,
+        Some(0.0),
+        "content width must not go negative"
+    );
 }
 
 #[test]

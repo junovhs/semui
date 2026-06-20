@@ -1,5 +1,5 @@
-use super::model::{HtmlNode, HtmlNodeKind, SourceGraphError};
 use super::html_support::{find_tag_end, parse_start_tag};
+use super::model::{HtmlNode, HtmlNodeKind, SourceGraphError};
 
 pub fn parse_html_document(
     document_id: usize,
@@ -101,7 +101,11 @@ impl HtmlTreeBuilder {
         end
     }
 
-    fn push_element(&mut self, raw_tag: &str, offset: usize) -> Result<Option<OpenNode>, SourceGraphError> {
+    fn push_element(
+        &mut self,
+        raw_tag: &str,
+        offset: usize,
+    ) -> Result<Option<OpenNode>, SourceGraphError> {
         let start_tag = parse_start_tag(raw_tag, offset)?;
         let (parent_id, dom_path) = self.next_child_location()?;
         let id = self.nodes.len();
@@ -153,10 +157,13 @@ impl HtmlTreeBuilder {
             });
         }
 
-        let node = self.nodes.get(open.id).ok_or_else(|| SourceGraphError::UnsupportedHtml {
-            reason: "open node was missing from the HTML tree".to_owned(),
-            offset,
-        })?;
+        let node = self
+            .nodes
+            .get(open.id)
+            .ok_or_else(|| SourceGraphError::UnsupportedHtml {
+                reason: "open node was missing from the HTML tree".to_owned(),
+                offset,
+            })?;
         if node.name.as_deref() != Some(name) {
             return Err(SourceGraphError::UnsupportedHtml {
                 reason: format!(

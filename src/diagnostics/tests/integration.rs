@@ -2,7 +2,7 @@
 
 use std::path::PathBuf;
 
-use crate::diagnostics::{analyze, DiagnosticKind};
+use crate::diagnostics::{DiagnosticKind, analyze};
 use crate::load_scene_source_graph;
 
 fn repo_root() -> PathBuf {
@@ -49,7 +49,10 @@ fn profile_card_has_no_unsupported_selectors() -> Result<(), Box<dyn std::error:
         .filter(|d| d.kind == DiagnosticKind::UnsupportedSelector)
         .collect();
 
-    assert!(bad_selectors.is_empty(), "unexpected selector issues: {bad_selectors:?}");
+    assert!(
+        bad_selectors.is_empty(),
+        "unexpected selector issues: {bad_selectors:?}"
+    );
     Ok(())
 }
 
@@ -63,7 +66,10 @@ fn profile_card_has_no_unsupported_values() -> Result<(), Box<dyn std::error::Er
         .filter(|d| d.kind == DiagnosticKind::UnsupportedValue)
         .collect();
 
-    assert!(bad_values.is_empty(), "unexpected value issues: {bad_values:?}");
+    assert!(
+        bad_values.is_empty(),
+        "unexpected value issues: {bad_values:?}"
+    );
     Ok(())
 }
 
@@ -95,7 +101,10 @@ fn action_row_has_appearance_unsupported_property() -> Result<(), Box<dyn std::e
         .iter()
         .any(|d| d.property.as_deref() == Some("appearance"));
 
-    assert!(has_appearance, "expected appearance diagnostic; got: {diags:?}");
+    assert!(
+        has_appearance,
+        "expected appearance diagnostic; got: {diags:?}"
+    );
     Ok(())
 }
 

@@ -29,7 +29,10 @@ fn line_height_normal_serializes_as_tagged_kind() -> Result<(), serde_json::Erro
     let json = serde_json::to_string(&LineHeight::Normal)?;
     let v: serde_json::Value = serde_json::from_str(&json)?;
     assert_eq!(v["kind"], "normal", "expected kind=normal, got: {json}");
-    assert!(v.get("value").is_none(), "normal must not carry a value field");
+    assert!(
+        v.get("value").is_none(),
+        "normal must not carry a value field"
+    );
     Ok(())
 }
 
@@ -57,14 +60,32 @@ fn none_optional_fields_absent_from_json() -> Result<(), serde_json::Error> {
     let json = ir.to_json()?;
     let v: serde_json::Value = serde_json::from_str(&json)?;
     let node = &v["nodes"][0];
-    assert!(node.get("parent_id").is_none(), "parent_id must be absent when None");
-    assert!(node.get("control_kind").is_none(), "control_kind must be absent when None");
-    assert!(node.get("text_content").is_none(), "text_content must be absent when None");
-    assert!(node.get("typography").is_none(), "typography must be absent when None");
-    assert!(node["source"].get("span").is_none(), "source.span must be absent when None");
+    assert!(
+        node.get("parent_id").is_none(),
+        "parent_id must be absent when None"
+    );
+    assert!(
+        node.get("control_kind").is_none(),
+        "control_kind must be absent when None"
+    );
+    assert!(
+        node.get("text_content").is_none(),
+        "text_content must be absent when None"
+    );
+    assert!(
+        node.get("typography").is_none(),
+        "typography must be absent when None"
+    );
+    assert!(
+        node["source"].get("span").is_none(),
+        "source.span must be absent when None"
+    );
     let layout = &node["layout"];
     for field in &["top", "left", "width", "height", "min_width"] {
-        assert!(layout.get(field).is_none(), "{field} must be absent from layout when None");
+        assert!(
+            layout.get(field).is_none(),
+            "{field} must be absent from layout when None"
+        );
     }
     Ok(())
 }

@@ -1,16 +1,13 @@
 mod parse;
 
+use parse::ParsedManifest;
 use std::fs;
 use std::path::{Path, PathBuf};
-use parse::ParsedManifest;
 
 #[derive(Debug)]
 pub enum FixtureManifestError {
     Io(std::io::Error),
-    Parse {
-        line: usize,
-        message: String,
-    },
+    Parse { line: usize, message: String },
     SceneNotFound { scene_id: String },
 }
 
@@ -19,10 +16,16 @@ impl std::fmt::Display for FixtureManifestError {
         match self {
             Self::Io(error) => write!(f, "failed to read fixture manifest: {error}"),
             Self::Parse { line, message } => {
-                write!(f, "failed to parse fixture manifest at line {line}: {message}")
+                write!(
+                    f,
+                    "failed to parse fixture manifest at line {line}: {message}"
+                )
             }
             Self::SceneNotFound { scene_id } => {
-                write!(f, "fixture scene `{scene_id}` was not found in the manifest")
+                write!(
+                    f,
+                    "fixture scene `{scene_id}` was not found in the manifest"
+                )
             }
         }
     }
@@ -85,7 +88,9 @@ impl FixtureManifest {
     }
 
     pub fn manifest_root(&self) -> &Path {
-        self.manifest_path.parent().unwrap_or_else(|| Path::new("."))
+        self.manifest_path
+            .parent()
+            .unwrap_or_else(|| Path::new("."))
     }
 
     pub fn scene(&self, scene_id: &str) -> Result<FixtureSceneEntry, FixtureManifestError> {

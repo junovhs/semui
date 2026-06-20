@@ -1,7 +1,0 @@
-COMMANDS
-  cargo clippy --all-targets --no-deps -- -D warnings ... PASS (718ms)
-  cargo test ... PASS (1073ms)
-
-LOCALITY: PASS | 52 edges | 0 violations | 0 cycles
-
-No blocking violations.

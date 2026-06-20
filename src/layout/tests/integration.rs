@@ -22,13 +22,17 @@ fn profile_card_absolute_geometry_extracted() -> Result<(), Box<dyn std::error::
 }
 
 #[test]
-fn profile_card_has_correct_explicit_coords_and_content_box() -> Result<(), Box<dyn std::error::Error>> {
+fn profile_card_has_correct_explicit_coords_and_content_box()
+-> Result<(), Box<dyn std::error::Error>> {
     let graph = load_scene_source_graph(repo_root(), "profile_card_absolute")?;
     let resolved = resolve_scene(&graph)?;
     let scene = compute_layout(&resolved);
 
     let Some(card) = scene.nodes.iter().find(|n| {
-        n.node.attributes.iter().any(|(k, v)| k == "class" && v.contains("profile-card"))
+        n.node
+            .attributes
+            .iter()
+            .any(|(k, v)| k == "class" && v.contains("profile-card"))
     }) else {
         return Err("profile-card not found".into());
     };
@@ -52,7 +56,10 @@ fn avatar_circle_has_border_box_content_size() -> Result<(), Box<dyn std::error:
     let scene = compute_layout(&resolved);
 
     let Some(avatar) = scene.nodes.iter().find(|n| {
-        n.node.attributes.iter().any(|(k, v)| k == "class" && v.contains("avatar"))
+        n.node
+            .attributes
+            .iter()
+            .any(|(k, v)| k == "class" && v.contains("avatar"))
     }) else {
         return Err("avatar not found".into());
     };
@@ -75,7 +82,10 @@ fn stacked_card_has_explicit_container_width() -> Result<(), Box<dyn std::error:
     let scene = compute_layout(&resolved);
 
     let Some(card) = scene.nodes.iter().find(|n| {
-        n.node.attributes.iter().any(|(k, v)| k == "class" && v == "card")
+        n.node
+            .attributes
+            .iter()
+            .any(|(k, v)| k == "class" && v == "card")
     }) else {
         return Err("card not found".into());
     };
@@ -99,7 +109,10 @@ fn profile_card_border_radius_and_width_in_geometry() -> Result<(), Box<dyn std:
     let scene = compute_layout(&resolved);
 
     let Some(card) = scene.nodes.iter().find(|n| {
-        n.node.attributes.iter().any(|(k, v)| k == "class" && v.contains("profile-card"))
+        n.node
+            .attributes
+            .iter()
+            .any(|(k, v)| k == "class" && v.contains("profile-card"))
     }) else {
         return Err("profile-card not found".into());
     };

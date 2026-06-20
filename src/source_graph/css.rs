@@ -49,7 +49,8 @@ pub fn parse_css_document(
 
         let body_end = index;
         let selectors = parse_selectors(selector_text, selector_start)?;
-        let declarations = parse_css_declarations(source, &source[body_start..body_end], body_start)?;
+        let declarations =
+            parse_css_declarations(source, &source[body_start..body_end], body_start)?;
         rules.push(CssRule {
             id: rules.len(),
             selectors,
@@ -117,7 +118,11 @@ fn parse_css_declarations(
         declarations.push(CssDeclaration {
             property: property.to_owned(),
             value: value.to_owned(),
-            span: span_for(full_source, block_offset + cursor, block_offset + cursor + segment_len),
+            span: span_for(
+                full_source,
+                block_offset + cursor,
+                block_offset + cursor + segment_len,
+            ),
         });
         cursor += segment_len + 1;
     }

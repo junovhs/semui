@@ -26,11 +26,20 @@ fn default_layout() -> Layout {
 }
 
 fn default_paint() -> Paint {
-    Paint { background_color: None, border: None, border_radius: None, cursor: None }
+    Paint {
+        background_color: None,
+        border: None,
+        border_radius: None,
+        cursor: None,
+    }
 }
 
 fn source_ref() -> SourceRef {
-    SourceRef { doc_id: 0, dom_path: "0/1".to_owned(), span: None }
+    SourceRef {
+        doc_id: 0,
+        dom_path: "0/1".to_owned(),
+        span: None,
+    }
 }
 
 fn minimal_scene(nodes: Vec<IrNode>) -> SceneIr {
@@ -131,9 +140,9 @@ fn text_node_content_appears_inside_parent() {
     let html = build_html(&minimal_scene(vec![parent, text]));
     assert!(html.contains("Hello World"), "html={html}");
     // Text must be inside the parent div
-    let div_pos  = html.find("<div class=\"n0\">");
+    let div_pos = html.find("<div class=\"n0\">");
     let text_pos = html.find("Hello World");
-    assert!(div_pos.is_some(),  "div not found in html={html}");
+    assert!(div_pos.is_some(), "div not found in html={html}");
     assert!(text_pos.is_some(), "text not found in html={html}");
     assert!(text_pos > div_pos, "text must come after opening div tag");
 }
