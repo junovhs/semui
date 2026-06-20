@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "ishoo": {
+      "args": [
+        "mcp"
+      ],
+      "command": "ishoo"
+    }
+  }
+}
