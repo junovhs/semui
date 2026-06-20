@@ -3,11 +3,26 @@
 use std::path::PathBuf;
 
 use crate::ir::SceneIr;
-use crate::release::{run_corpus_proof, write_golden_artifacts};
+use crate::release::{build_golden_artifacts, run_corpus_proof};
 
 fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
 }
+
+/// Normalize line endings so comparisons are stable across platforms and the
+/// committed golden's checkout encoding.
+fn norm(s: &str) -> String {
+    s.replace("\r\n", "\n")
+}
+
+const SCENE_IDS: [&str; 6] = [
+    "profile_card_absolute",
+    "stacked_info_card",
+    "action_row_variants",
+    "nested_panel_inset",
+    "typography_specimen",
+    "update_toast",
+];
 
 // ---------------------------------------------------------------------------
 // Corpus-wide acceptance gate
@@ -63,22 +78,47 @@ fn corpus_has_nonzero_ir_nodes() -> Result<(), Box<dyn std::error::Error>> {
 /// Golden scene.semui.json must be valid JSON that round-trips through serde.
 #[test]
 fn golden_semui_json_is_deserializable_for_all_scenes() -> Result<(), Box<dyn std::error::Error>> {
-    let scene_ids = [
-        "profile_card_absolute",
-        "stacked_info_card",
-        "action_row_variants",
-        "nested_panel_inset",
-        "typography_specimen",
-        "update_toast",
-    ];
-    for scene_id in scene_ids {
-        let ir = write_golden_artifacts(repo_root(), scene_id)?;
+    for scene_id in SCENE_IDS {
+        let (ir, _) = build_golden_artifacts(repo_root(), scene_id)?;
         // Serialize → deserialize round-trip is lossless
         let json = ir.to_json()?;
         let ir2 = SceneIr::from_json(&json)?;
         assert_eq!(ir.schema_version, ir2.schema_version);
         assert_eq!(ir.scene_id, ir2.scene_id);
         assert_eq!(ir.nodes.len(), ir2.nodes.len());
+    }
+    Ok(())
+}
+
+/// Freshly generated artifacts must match the committed goldens exactly.
+/// This is the read-only acceptance gate: it never writes to the repo, so a
+/// normal `cargo test` leaves the working tree clean. If this fails, the
+/// goldens are stale and must be regenerated via the explicit maintenance step.
+#[test]
+fn generated_artifacts_match_committed_goldens() -> Result<(), Box<dyn std::error::Error>> {
+    use std::fs::read_to_string;
+
+    for scene_id in SCENE_IDS {
+        let (ir, emitted) = build_golden_artifacts(repo_root(), scene_id)?;
+        let dir = repo_root()
+            .join("fixtures")
+            .join("v0.1")
+            .join(scene_id)
+            .join("expected");
+
+        let cases = [
+            ("scene.semui.json", ir.to_json()?),
+            ("roundtrip.html", emitted.html),
+            ("roundtrip.css", emitted.css),
+        ];
+        for (name, generated) in cases {
+            let committed = read_to_string(dir.join(name))?;
+            assert_eq!(
+                norm(&committed),
+                norm(&generated),
+                "stale golden: {scene_id}/expected/{name} differs from generated output"
+            );
+        }
     }
     Ok(())
 }

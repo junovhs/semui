@@ -10,7 +10,7 @@ mod tests;
 use std::path::Path;
 
 use crate::diagnostics::analyze;
-use crate::emitter::emit;
+use crate::emitter::{EmittedScene, emit};
 use crate::extractor::extract_ir;
 use crate::ir::SceneIr;
 use crate::layout::compute_layout;
@@ -103,18 +103,35 @@ pub fn run_corpus_proof(
 // Golden artifact generation
 // ---------------------------------------------------------------------------
 
-/// Generate and write golden artifacts for `scene_id` to the fixture's
-/// `expected/` directory.  Overwrites existing files.
-pub fn write_golden_artifacts(
+/// Run the pipeline for `scene_id` and return its IR plus emitted artifacts
+/// **without touching the filesystem**. This is the read-only core shared by
+/// verification (which compares against committed goldens) and the explicit
+/// golden-writing maintenance step.
+pub fn build_golden_artifacts(
     repo_root: impl AsRef<Path>,
     scene_id: &str,
-) -> Result<SceneIr, Box<dyn std::error::Error>> {
+) -> Result<(SceneIr, EmittedScene), Box<dyn std::error::Error>> {
     let root = repo_root.as_ref();
     let graph = load_scene_source_graph(root, scene_id)?;
     let resolved = resolve_scene(&graph)?;
     let laid_out = compute_layout(&resolved);
     let ir = extract_ir(&laid_out, &graph)?;
     let emitted = emit(&ir);
+    Ok((ir, emitted))
+}
+
+/// Generate and write golden artifacts for `scene_id` to the fixture's
+/// `expected/` directory.  Overwrites existing files.
+///
+/// This is an explicit maintenance operation, separate from verification, and
+/// must never run as part of a normal `cargo test`. See
+/// `docs/v0.1-acceptance-gate.md`.
+pub fn write_golden_artifacts(
+    repo_root: impl AsRef<Path>,
+    scene_id: &str,
+) -> Result<SceneIr, Box<dyn std::error::Error>> {
+    let root = repo_root.as_ref();
+    let (ir, emitted) = build_golden_artifacts(root, scene_id)?;
 
     let expected_dir = root
         .join("fixtures")

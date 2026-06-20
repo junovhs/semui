@@ -13,11 +13,6 @@ struct SceneBuilder {
     id: Option<String>,
     priority: Option<u32>,
     dir: Option<PathBuf>,
-    source_html: Option<PathBuf>,
-    source_css: Option<PathBuf>,
-    expected_semui: Option<PathBuf>,
-    expected_roundtrip_html: Option<PathBuf>,
-    expected_roundtrip_css: Option<PathBuf>,
     tags: Option<Vec<String>>,
 }
 
@@ -115,23 +110,6 @@ impl SceneBuilder {
             "id" => self.id = Some(parse_string(value, line_number)?),
             "priority" => self.priority = Some(parse_u32(value, line_number)?),
             "dir" => self.dir = Some(PathBuf::from(parse_string(value, line_number)?)),
-            "source_html" => {
-                self.source_html = Some(PathBuf::from(parse_string(value, line_number)?))
-            }
-            "source_css" => {
-                self.source_css = Some(PathBuf::from(parse_string(value, line_number)?))
-            }
-            "expected_semui" => {
-                self.expected_semui = Some(PathBuf::from(parse_string(value, line_number)?));
-            }
-            "expected_roundtrip_html" => {
-                self.expected_roundtrip_html =
-                    Some(PathBuf::from(parse_string(value, line_number)?));
-            }
-            "expected_roundtrip_css" => {
-                self.expected_roundtrip_css =
-                    Some(PathBuf::from(parse_string(value, line_number)?));
-            }
             "tags" => self.tags = Some(parse_string_array(value, line_number)?),
             _ => {
                 return Err(parse_error(
@@ -148,19 +126,6 @@ impl SceneBuilder {
             id: required(self.id, "id", line_number)?,
             priority: required(self.priority, "priority", line_number)?,
             dir: required(self.dir, "dir", line_number)?,
-            source_html: required(self.source_html, "source_html", line_number)?,
-            source_css: required(self.source_css, "source_css", line_number)?,
-            expected_semui: required(self.expected_semui, "expected_semui", line_number)?,
-            expected_roundtrip_html: required(
-                self.expected_roundtrip_html,
-                "expected_roundtrip_html",
-                line_number,
-            )?,
-            expected_roundtrip_css: required(
-                self.expected_roundtrip_css,
-                "expected_roundtrip_css",
-                line_number,
-            )?,
             tags: required(self.tags, "tags", line_number)?,
         })
     }

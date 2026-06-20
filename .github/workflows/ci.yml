@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    name: format, lint, test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Format
+        run: cargo fmt --all -- --check
+
+      - name: Clippy
+        run: cargo clippy --all-targets --no-deps -- -D warnings
+
+      - name: Test
+        run: cargo test --all-targets
+
+      - name: Doc tests
+        run: cargo test --doc
+
+      - name: Worktree must stay clean
+        # Verification and golden tests are read-only. If `cargo test` mutated
+        # any tracked file (e.g. rewrote a golden artifact), fail loudly.
+        run: |
+          if ! git diff --quiet; then
+            echo "::error::Test run left the working tree dirty:"
+            git status --short
+            git diff
+            exit 1
+          fi

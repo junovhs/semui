@@ -1,2 +1,7 @@
+# Force LF for all text so the working tree is byte-identical to emitter
+# output (which always writes LF). This keeps the post-test clean-worktree
+# gate reproducible regardless of each machine's core.autocrlf setting.
+* text=auto eol=lf
+
 *.ishoo binary
 .ishoo/** binary

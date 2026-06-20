@@ -55,8 +55,8 @@ impl SceneSourceGraph {
     }
 
     pub fn load(scene: FixtureSceneEntry) -> Result<Self, SourceGraphError> {
-        let html_path = scene.manifest_root.join(&scene.scene.source_html);
-        let css_path = scene.manifest_root.join(&scene.scene.source_css);
+        let html_path = scene.manifest_root.join(scene.scene.source_html());
+        let css_path = scene.manifest_root.join(scene.scene.source_css());
         let html_contents = fs::read_to_string(&html_path)?;
         let css_contents = fs::read_to_string(&css_path)?;
         let html = SourceDocument::new_html(0, html_path, html_contents);

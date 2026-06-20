@@ -51,13 +51,22 @@ pub struct FixtureManifest {
 pub struct FixtureScene {
     pub id: String,
     pub priority: u32,
+    /// Scene directory relative to the manifest root. All scene artifacts live
+    /// at conventional paths under this directory (see [`FixtureScene::source_html`]).
     pub dir: PathBuf,
-    pub source_html: PathBuf,
-    pub source_css: PathBuf,
-    pub expected_semui: PathBuf,
-    pub expected_roundtrip_html: PathBuf,
-    pub expected_roundtrip_css: PathBuf,
     pub tags: Vec<String>,
+}
+
+impl FixtureScene {
+    /// Source HTML path, relative to `dir`: `<dir>/source.html`.
+    pub fn source_html(&self) -> PathBuf {
+        self.dir.join("source.html")
+    }
+
+    /// Source CSS path, relative to `dir`: `<dir>/source.css`.
+    pub fn source_css(&self) -> PathBuf {
+        self.dir.join("source.css")
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
