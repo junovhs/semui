@@ -3,7 +3,7 @@
 use std::path::PathBuf;
 
 use crate::ir::SceneIr;
-use crate::release::{build_golden_artifacts, run_corpus_proof};
+use crate::release::{build_golden_artifacts, run_corpus_proof, write_golden_artifacts};
 
 fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -93,7 +93,8 @@ fn golden_semui_json_is_deserializable_for_all_scenes() -> Result<(), Box<dyn st
 /// Freshly generated artifacts must match the committed goldens exactly.
 /// This is the read-only acceptance gate: it never writes to the repo, so a
 /// normal `cargo test` leaves the working tree clean. If this fails, the
-/// goldens are stale and must be regenerated via the explicit maintenance step.
+/// goldens are stale and must be regenerated via the explicit `regenerate_goldens`
+/// maintenance step (run with `--ignored`).
 #[test]
 fn generated_artifacts_match_committed_goldens() -> Result<(), Box<dyn std::error::Error>> {
     use std::fs::read_to_string;
@@ -194,4 +195,30 @@ fn supported_subset_includes_core_properties() {
         diags.is_empty(),
         "core supported properties must not produce diagnostics: {diags:?}"
     );
+}
+
+// ---------------------------------------------------------------------------
+// Explicit golden-regeneration maintenance path
+// ---------------------------------------------------------------------------
+
+/// Regenerate the committed golden artifacts for every scene.
+///
+/// This is the **explicit maintenance path** referenced by
+/// `generated_artifacts_match_committed_goldens`. It is the only thing that
+/// writes to `fixtures/v0.1/*/expected/`, and it is `#[ignore]`d so a normal
+/// `cargo test` never runs it — keeping verification read-only. Run it
+/// deliberately after an intentional pipeline change:
+///
+/// ```text
+/// cargo test --lib release::tests::proof::regenerate_goldens -- --ignored
+/// ```
+///
+/// Then review the resulting diff and commit the refreshed goldens.
+#[test]
+#[ignore = "maintenance only: rewrites committed goldens; run with --ignored"]
+fn regenerate_goldens() -> Result<(), Box<dyn std::error::Error>> {
+    for scene_id in SCENE_IDS {
+        write_golden_artifacts(repo_root(), scene_id)?;
+    }
+    Ok(())
 }
