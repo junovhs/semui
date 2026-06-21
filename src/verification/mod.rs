@@ -17,7 +17,9 @@ mod tests;
 
 use crate::emitter::emit;
 use crate::extractor::extract_ir;
-use crate::ir::{IrNode, NodeKind, SceneIr};
+use std::fmt::Debug;
+
+use crate::ir::{IrNode, SceneIr};
 use crate::layout::compute_layout;
 use crate::resolver::resolve_scene;
 use crate::source_graph::SceneSourceGraph;
@@ -84,6 +86,21 @@ pub fn verify_round_trip(
 fn compare_ir(ir1: &SceneIr, ir2: &SceneIr) -> Vec<Drift> {
     let mut drift: Vec<Drift> = Vec::new();
 
+    compare_value(
+        &ir1.schema_version,
+        &ir2.schema_version,
+        "scene.schema_version",
+        &mut drift,
+    );
+    compare_value(&ir1.scene_id, &ir2.scene_id, "scene.scene_id", &mut drift);
+    compare_value(&ir1.corpus, &ir2.corpus, "scene.corpus", &mut drift);
+    compare_value(
+        &ir1.execution_mode,
+        &ir2.execution_mode,
+        "scene.execution_mode",
+        &mut drift,
+    );
+
     if ir1.nodes.len() != ir2.nodes.len() {
         drift.push(Drift {
             message: format!(
@@ -92,8 +109,6 @@ fn compare_ir(ir1: &SceneIr, ir2: &SceneIr) -> Vec<Drift> {
                 ir2.nodes.len()
             ),
         });
-        // Can't compare per-node if counts differ
-        return drift;
     }
 
     for (idx, (n1, n2)) in ir1.nodes.iter().zip(ir2.nodes.iter()).enumerate() {
@@ -104,72 +119,134 @@ fn compare_ir(ir1: &SceneIr, ir2: &SceneIr) -> Vec<Drift> {
 }
 
 fn compare_node(n1: &IrNode, n2: &IrNode, idx: usize, drift: &mut Vec<Drift>) {
-    if n1.kind != n2.kind {
-        drift.push(Drift {
-            message: format!("node[{idx}]: kind {:?} → {:?}", n1.kind, n2.kind),
-        });
+    let node = format!("node[{idx}]");
+    macro_rules! field {
+        ($path:literal, $left:expr, $right:expr) => {
+            compare_value(&$left, &$right, &format!("{node}.{}", $path), drift)
+        };
     }
 
-    if n1.kind == NodeKind::Text {
-        if n1.text_content != n2.text_content {
-            drift.push(Drift {
-                message: format!(
-                    "node[{idx}]: text_content {:?} → {:?}",
-                    n1.text_content, n2.text_content
-                ),
-            });
-        }
-        return;
-    }
+    field!("id", n1.id, n2.id);
+    field!("kind", n1.kind, n2.kind);
+    field!("parent_id", n1.parent_id, n2.parent_id);
+    field!("control_kind", n1.control_kind, n2.control_kind);
+    field!("text_content", n1.text_content, n2.text_content);
 
     // Layout
-    compare_opt_f32(n1.layout.width, n2.layout.width, idx, "layout.width", drift);
-    compare_opt_f32(
-        n1.layout.height,
-        n2.layout.height,
-        idx,
-        "layout.height",
-        drift,
+    field!("layout.position", n1.layout.position, n2.layout.position);
+    field!("layout.display", n1.layout.display, n2.layout.display);
+    field!(
+        "layout.box_sizing",
+        n1.layout.box_sizing,
+        n2.layout.box_sizing
     );
-    compare_opt_f32(n1.layout.top, n2.layout.top, idx, "layout.top", drift);
-    compare_opt_f32(n1.layout.left, n2.layout.left, idx, "layout.left", drift);
+    field!("layout.top", n1.layout.top, n2.layout.top);
+    field!("layout.left", n1.layout.left, n2.layout.left);
+    field!("layout.width", n1.layout.width, n2.layout.width);
+    field!("layout.height", n1.layout.height, n2.layout.height);
+    field!("layout.min_width", n1.layout.min_width, n2.layout.min_width);
+    field!(
+        "layout.margin.top",
+        n1.layout.margin.top,
+        n2.layout.margin.top
+    );
+    field!(
+        "layout.margin.right",
+        n1.layout.margin.right,
+        n2.layout.margin.right
+    );
+    field!(
+        "layout.margin.bottom",
+        n1.layout.margin.bottom,
+        n2.layout.margin.bottom
+    );
+    field!(
+        "layout.margin.left",
+        n1.layout.margin.left,
+        n2.layout.margin.left
+    );
+    field!(
+        "layout.padding.top",
+        n1.layout.padding.top,
+        n2.layout.padding.top
+    );
+    field!(
+        "layout.padding.right",
+        n1.layout.padding.right,
+        n2.layout.padding.right
+    );
+    field!(
+        "layout.padding.bottom",
+        n1.layout.padding.bottom,
+        n2.layout.padding.bottom
+    );
+    field!(
+        "layout.padding.left",
+        n1.layout.padding.left,
+        n2.layout.padding.left
+    );
+    field!(
+        "layout.flex_direction",
+        n1.layout.flex_direction,
+        n2.layout.flex_direction
+    );
+    field!(
+        "layout.align_items",
+        n1.layout.align_items,
+        n2.layout.align_items
+    );
+    field!(
+        "layout.justify_content",
+        n1.layout.justify_content,
+        n2.layout.justify_content
+    );
+    field!(
+        "layout.align_self",
+        n1.layout.align_self,
+        n2.layout.align_self
+    );
+    field!("layout.gap", n1.layout.gap, n2.layout.gap);
 
     // Paint
-    if n1.paint.background_color != n2.paint.background_color {
-        drift.push(Drift {
-            message: format!(
-                "node[{idx}]: background_color {:?} → {:?}",
-                n1.paint.background_color, n2.paint.background_color
-            ),
-        });
+    field!(
+        "paint.background_color",
+        n1.paint.background_color,
+        n2.paint.background_color
+    );
+    match (&n1.paint.border, &n2.paint.border) {
+        (Some(b1), Some(b2)) => {
+            field!("paint.border.width", b1.width, b2.width);
+            field!("paint.border.color", b1.color, b2.color);
+        }
+        _ => field!("paint.border", n1.paint.border, n2.paint.border),
     }
-    if n1.paint.border_radius != n2.paint.border_radius {
-        drift.push(Drift {
-            message: format!(
-                "node[{idx}]: border_radius {:?} → {:?}",
-                n1.paint.border_radius, n2.paint.border_radius
-            ),
-        });
-    }
+    field!(
+        "paint.border_radius",
+        n1.paint.border_radius,
+        n2.paint.border_radius
+    );
+    field!("paint.cursor", n1.paint.cursor, n2.paint.cursor);
 
     // Typography
-    if n1.typography != n2.typography {
-        drift.push(Drift {
-            message: format!("node[{idx}]: typography differs"),
-        });
+    match (&n1.typography, &n2.typography) {
+        (Some(t1), Some(t2)) => {
+            field!("typography.font_family", t1.font_family, t2.font_family);
+            field!("typography.font_size", t1.font_size, t2.font_size);
+            field!("typography.font_weight", t1.font_weight, t2.font_weight);
+            field!("typography.line_height", t1.line_height, t2.line_height);
+            field!("typography.color", t1.color, t2.color);
+        }
+        _ => field!("typography", n1.typography, n2.typography),
     }
+
+    // `source` is deliberately excluded: it records parser provenance and is
+    // expected to change when emitted HTML/CSS is parsed for the second pass.
 }
 
-fn compare_opt_f32(
-    a: Option<f32>,
-    b: Option<f32>,
-    idx: usize,
-    field: &str,
-    drift: &mut Vec<Drift>,
-) {
+fn compare_value<T: Debug + PartialEq>(a: &T, b: &T, field: &str, drift: &mut Vec<Drift>) {
     if a != b {
         drift.push(Drift {
-            message: format!("node[{idx}]: {field} {a:?} → {b:?}"),
+            message: format!("{field}: {a:?} → {b:?}"),
         });
     }
 }
