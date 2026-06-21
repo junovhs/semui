@@ -1,0 +1,8 @@
+{
+  "structural": "pass",
+  "semantic_ir": "pass",
+  "diagnostics": "pass",
+  "computed_style": "pass",
+  "geometry": "pass",
+  "visual": "pass"
+}

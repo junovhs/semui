@@ -1,0 +1,9 @@
+body { margin: 0; }
+#sample { color: #000000; }
+[data-state] { color: #000000; }
+.sample:hover { color: #000000; }
+.outer .sample { color: #000000; }
+.outer > .sample { color: #000000; }
+.outer + .sample { color: #000000; }
+.outer ~ .sample { color: #000000; }
+.sample::before { color: #000000; }

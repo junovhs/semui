@@ -1,0 +1,4 @@
+unsupported-property:mystery-property
+unsupported-value:appearance=auto
+unsupported-value:position=relative
+unsupported-value:display=grid

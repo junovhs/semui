@@ -1,0 +1,6 @@
+body { margin: 0; font-family: Inter, sans-serif; }
+.setting { display: flex; box-sizing: border-box; align-items: center; justify-content: center; gap: 24px; width: 420px; margin: 16px; padding: 16px; background: #ffffff; border: 1px solid #dbe3ee; border-radius: 12px; }
+.copy { display: flex; flex-direction: column; gap: 4px; width: 260px; }
+.title { margin: 0; color: #172033; font-size: 14px; font-weight: 600; line-height: 20px; }
+.hint { margin: 0; color: #64748b; font-size: 12px; font-weight: 400; line-height: 16px; }
+button { appearance: none; box-sizing: border-box; width: 88px; height: 32px; padding: 0; background: #ecfdf5; border: 1px solid #6ee7b7; border-radius: 999px; cursor: pointer; color: #047857; font-family: Inter, sans-serif; font-size: 12px; font-weight: 600; line-height: 16px; }

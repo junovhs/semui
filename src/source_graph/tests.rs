@@ -15,7 +15,15 @@ fn loads_fixture_manifest() {
     let manifest = FixtureManifest::load(manifest_path).expect("manifest should load");
 
     assert_eq!(manifest.corpus, "v0.1");
-    assert_eq!(manifest.scenes.len(), 6);
+    assert_eq!(manifest.scenes.len(), 11);
+    assert_eq!(
+        manifest
+            .scenes
+            .iter()
+            .filter(|scene| scene.tags.iter().any(|tag| tag == "browser"))
+            .count(),
+        9
+    );
     assert!(
         manifest
             .scenes

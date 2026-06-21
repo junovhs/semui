@@ -62,10 +62,11 @@ function sceneEntries(manifest) {
   for (const block of manifest.split("[[scene]]").slice(1)) {
     const id = block.match(/^\s*id\s*=\s*"([^"]+)"/m)?.[1];
     const dir = block.match(/^\s*dir\s*=\s*"([^"]+)"/m)?.[1];
+    const tags = [...block.matchAll(/"([^"]+)"/g)].map((match) => match[1]);
     assert(id && dir, `invalid fixture manifest scene block: ${block}`);
-    entries.push({ id, dir });
+    if (tags.includes("browser")) entries.push({ id, dir });
   }
-  assert.equal(entries.length, 6, "browser proof must cover all six v0.1 fixtures");
+  assert(entries.length >= 6, "browser proof must cover the canonical v0.1 fixtures");
   return entries;
 }
 
@@ -453,6 +454,9 @@ try {
     const sourceCss = await readFile(path.join(sceneRoot, "source.css"), "utf8");
     const emittedHtml = await readFile(path.join(sceneRoot, "expected", "roundtrip.html"), "utf8");
     const emittedCss = await readFile(path.join(sceneRoot, "expected", "roundtrip.css"), "utf8");
+    const expectedGates = JSON.parse(
+      await readFile(path.join(sceneRoot, "expected", "gates.json"), "utf8"),
+    );
 
     const source = await captureDeterministically(
         context,
@@ -493,6 +497,13 @@ try {
       }
     }
     assert.equal(comparison.visual.status, "pass", `${scene.id}: ${comparison.visual.details.join("\n")}`);
+    for (const gateName of ["computed_style", "geometry", "visual"]) {
+      assert.equal(
+        comparison[gateName].status,
+        expectedGates[gateName],
+        `${scene.id}: declared ${gateName} outcome drifted`,
+      );
+    }
 
     captures.push({
       scene_id: scene.id,

@@ -194,7 +194,11 @@ pub fn run_corpus_proof(
 
     let mut scenes: Vec<SceneProof> = Vec::new();
 
-    for scene in &manifest.scenes {
+    for scene in manifest
+        .scenes
+        .iter()
+        .filter(|scene| scene.tags.iter().any(|tag| tag == "browser"))
+    {
         let scene_id = scene.id.clone();
         let graph = load_scene_source_graph(repo_root.as_ref(), &scene_id)?;
 

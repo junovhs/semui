@@ -8,6 +8,8 @@ use crate::release::{
     GateEvidence, GateStatus, SceneGates, SceneProof, build_golden_artifacts, run_corpus_proof,
     write_golden_artifacts,
 };
+use crate::source_graph::load_scene_source_graph;
+use crate::verification::verify_round_trip;
 
 use super::super::validate_diagnostic_expectations;
 
@@ -21,14 +23,24 @@ fn norm(s: &str) -> String {
     s.replace("\r\n", "\n")
 }
 
-const SCENE_IDS: [&str; 6] = [
-    "profile_card_absolute",
-    "stacked_info_card",
-    "action_row_variants",
-    "nested_panel_inset",
-    "typography_specimen",
-    "update_toast",
-];
+fn fixture_scene_ids(
+    required_tag: Option<&str>,
+) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+    let manifest = crate::load_fixture_manifest(
+        repo_root()
+            .join("fixtures")
+            .join("v0.1")
+            .join("manifest.toml"),
+    )?;
+    Ok(manifest
+        .scenes
+        .iter()
+        .filter(|scene| {
+            required_tag.is_none_or(|tag| scene.tags.iter().any(|candidate| candidate == tag))
+        })
+        .map(|scene| scene.id.clone())
+        .collect())
+}
 
 // ---------------------------------------------------------------------------
 // Corpus-wide acceptance gate
@@ -115,15 +127,15 @@ fn corpus_evidence_json_is_deterministic_and_names_every_gate()
     Ok(())
 }
 
-/// Corpus must cover all 6 scenes defined in the manifest.
+/// Corpus proof covers every fixture explicitly tagged for browser evidence.
 #[test]
-fn corpus_proof_covers_all_six_scenes() -> Result<(), Box<dyn std::error::Error>> {
+fn corpus_proof_covers_all_browser_scenes() -> Result<(), Box<dyn std::error::Error>> {
     let proof = run_corpus_proof(repo_root())?;
     assert_eq!(
         proof.scenes.len(),
-        6,
-        "expected 6 scenes in the v0.1 corpus"
+        fixture_scene_ids(Some("browser"))?.len()
     );
+    assert!(proof.scenes.len() >= 6, "canonical browser corpus shrank");
     Ok(())
 }
 
@@ -151,6 +163,197 @@ fn unexpected_diagnostic_fails_the_fixture_contract() {
     assert!(error.contains("unsupported-value:display=none"));
 }
 
+#[test]
+fn every_fixture_declares_and_meets_expected_gate_outcomes()
+-> Result<(), Box<dyn std::error::Error>> {
+    use crate::diagnostics::analyze;
+
+    let root = repo_root();
+    let manifest =
+        crate::load_fixture_manifest(root.join("fixtures").join("v0.1").join("manifest.toml"))?;
+    for scene in &manifest.scenes {
+        let graph = load_scene_source_graph(&root, &scene.id)?;
+        let expected_root = root
+            .join("fixtures")
+            .join("v0.1")
+            .join(&scene.dir)
+            .join("expected");
+        let diagnostics = analyze(&graph);
+        let expected_diagnostics = std::fs::read_to_string(expected_root.join("diagnostics.txt"))?;
+        if let Err(error) =
+            validate_diagnostic_expectations(&scene.id, &diagnostics, &expected_diagnostics)
+        {
+            panic!("{error}");
+        }
+
+        let expected: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(expected_root.join("gates.json"))?)?;
+        let round_trip = verify_round_trip(&graph)?;
+        let actual_internal = [
+            ("structural", round_trip.structural.pass),
+            ("semantic_ir", round_trip.semantic_ir.pass),
+            ("diagnostics", true),
+        ];
+        for (gate, passed) in actual_internal {
+            let actual = if passed { "pass" } else { "fail" };
+            assert_eq!(expected[gate], actual, "{} expected {gate}", scene.id);
+        }
+        for gate in ["computed_style", "geometry", "visual"] {
+            let required = if scene.tags.iter().any(|tag| tag == "browser") {
+                "pass"
+            } else {
+                "unavailable"
+            };
+            assert_eq!(expected[gate], required, "{} expected {gate}", scene.id);
+        }
+        if scene.tags.iter().any(|tag| tag == "negative") {
+            assert!(
+                !diagnostics.is_empty(),
+                "negative fixture {} must prove at least one diagnostic",
+                scene.id
+            );
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn coverage_matrix_names_every_supported_property_and_real_fixture()
+-> Result<(), Box<dyn std::error::Error>> {
+    const PROPERTIES: &[&str] = &[
+        "margin",
+        "padding",
+        "background",
+        "border",
+        "appearance",
+        "position",
+        "display",
+        "box-sizing",
+        "top",
+        "left",
+        "width",
+        "height",
+        "min-width",
+        "margin-top",
+        "margin-right",
+        "margin-bottom",
+        "margin-left",
+        "padding-top",
+        "padding-right",
+        "padding-bottom",
+        "padding-left",
+        "border-width",
+        "border-color",
+        "border-radius",
+        "background-color",
+        "flex-direction",
+        "align-items",
+        "justify-content",
+        "align-self",
+        "gap",
+        "cursor",
+        "color",
+        "font-family",
+        "font-size",
+        "font-weight",
+        "line-height",
+    ];
+    let root = repo_root();
+    let coverage: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(
+        root.join("fixtures").join("v0.1").join("coverage.json"),
+    )?)?;
+    let properties = coverage["supported_properties"]
+        .as_object()
+        .expect("supported_properties must be an object");
+    assert_eq!(properties.len(), PROPERTIES.len());
+    for property in PROPERTIES {
+        let scene_id = properties[*property]
+            .as_str()
+            .unwrap_or_else(|| panic!("coverage missing supported property {property}"));
+        let graph = load_scene_source_graph(&root, scene_id)?;
+        assert!(
+            graph.css_rules.iter().any(|rule| rule
+                .declarations
+                .iter()
+                .any(|declaration| declaration.property == *property)),
+            "coverage target {scene_id} does not declare {property}"
+        );
+    }
+
+    let selectors = coverage["supported_selectors"]
+        .as_object()
+        .expect("supported_selectors must be an object");
+    for selector in ["body", "h1", "p", "button", "button.primary"] {
+        let scene_id = selectors[selector]
+            .as_str()
+            .unwrap_or_else(|| panic!("coverage missing supported selector {selector}"));
+        let graph = load_scene_source_graph(&root, scene_id)?;
+        assert!(
+            graph
+                .css_rules
+                .iter()
+                .any(|rule| rule.selectors.iter().any(|candidate| candidate == selector)),
+            "coverage target {scene_id} does not use selector {selector}"
+        );
+    }
+    let class_scene = selectors[".class"].as_str().expect("class coverage scene");
+    assert!(
+        load_scene_source_graph(&root, class_scene)?
+            .css_rules
+            .iter()
+            .flat_map(|rule| &rule.selectors)
+            .any(|selector| selector.starts_with('.')
+                && selector[1..]
+                    .chars()
+                    .all(|character| character.is_alphanumeric() || character == '-'))
+    );
+    let group_scene = selectors["comma-separated group"]
+        .as_str()
+        .expect("group coverage scene");
+    assert!(
+        load_scene_source_graph(&root, group_scene)?
+            .css_rules
+            .iter()
+            .any(|rule| rule.selectors.len() > 1)
+    );
+
+    for (value_name, specification) in coverage["supported_values"]
+        .as_object()
+        .expect("supported_values must be an object")
+    {
+        let scene_id = specification["scene"].as_str().expect("value scene");
+        let property = specification["property"].as_str().expect("value property");
+        let value = specification["value"].as_str().expect("value spelling");
+        let graph = load_scene_source_graph(&root, scene_id)?;
+        assert!(
+            graph.css_rules.iter().any(|rule| rule
+                .declarations
+                .iter()
+                .any(|declaration| declaration.property == property && declaration.value == value)),
+            "coverage target {scene_id} does not exercise {value_name}: {property}: {value}"
+        );
+    }
+
+    let manifest =
+        crate::load_fixture_manifest(root.join("fixtures").join("v0.1").join("manifest.toml"))?;
+    for scene_id in coverage["real_world_scenes"]
+        .as_array()
+        .expect("real_world_scenes must be an array")
+    {
+        let scene_id = scene_id.as_str().expect("real-world id must be a string");
+        let scene = manifest.scene(scene_id)?;
+        assert!(scene.scene.tags.iter().any(|tag| tag == "real-world"));
+    }
+    assert_eq!(
+        coverage["negative_categories"]
+            .as_object()
+            .expect("negative_categories must be an object")
+            .len(),
+        3
+    );
+    Ok(())
+}
+
 // ---------------------------------------------------------------------------
 // Per-scene golden artifact validation
 // ---------------------------------------------------------------------------
@@ -158,8 +361,8 @@ fn unexpected_diagnostic_fails_the_fixture_contract() {
 /// Golden scene.semui.json must be valid JSON that round-trips through serde.
 #[test]
 fn golden_semui_json_is_deserializable_for_all_scenes() -> Result<(), Box<dyn std::error::Error>> {
-    for scene_id in SCENE_IDS {
-        let (ir, _) = build_golden_artifacts(repo_root(), scene_id)?;
+    for scene_id in fixture_scene_ids(None)? {
+        let (ir, _) = build_golden_artifacts(repo_root(), &scene_id)?;
         // Serialize → deserialize round-trip is lossless
         let json = ir.to_json()?;
         let ir2 = SceneIr::from_json(&json)?;
@@ -179,12 +382,12 @@ fn golden_semui_json_is_deserializable_for_all_scenes() -> Result<(), Box<dyn st
 fn generated_artifacts_match_committed_goldens() -> Result<(), Box<dyn std::error::Error>> {
     use std::fs::read_to_string;
 
-    for scene_id in SCENE_IDS {
-        let (ir, emitted) = build_golden_artifacts(repo_root(), scene_id)?;
+    for scene_id in fixture_scene_ids(None)? {
+        let (ir, emitted) = build_golden_artifacts(repo_root(), &scene_id)?;
         let dir = repo_root()
             .join("fixtures")
             .join("v0.1")
-            .join(scene_id)
+            .join(&scene_id)
             .join("expected");
 
         let cases = [
@@ -297,8 +500,8 @@ fn supported_subset_includes_core_properties() {
 #[test]
 #[ignore = "maintenance only: rewrites committed goldens; run with --ignored"]
 fn regenerate_goldens() -> Result<(), Box<dyn std::error::Error>> {
-    for scene_id in SCENE_IDS {
-        write_golden_artifacts(repo_root(), scene_id)?;
+    for scene_id in fixture_scene_ids(None)? {
+        write_golden_artifacts(repo_root(), &scene_id)?;
     }
     Ok(())
 }

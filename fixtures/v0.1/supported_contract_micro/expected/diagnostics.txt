@@ -1,0 +1,1 @@
+# No diagnostics expected: this microfixture exercises the supported contract.

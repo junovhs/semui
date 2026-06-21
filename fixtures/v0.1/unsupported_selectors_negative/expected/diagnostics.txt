@@ -1,0 +1,8 @@
+unsupported-selector:#sample
+unsupported-selector:[data-state]
+unsupported-selector:.sample:hover
+unsupported-selector:.outer .sample
+unsupported-selector:.outer > .sample
+unsupported-selector:.outer + .sample
+unsupported-selector:.outer ~ .sample
+unsupported-selector:.sample::before

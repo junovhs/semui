@@ -9,34 +9,64 @@ corpus = "v0.1"
 id = "profile_card_absolute"
 priority = 1
 dir = "profile_card_absolute"
-tags = ["absolute", "card", "buttons", "badge", "typography"]
+tags = ["browser", "canonical", "absolute", "card", "buttons", "badge", "typography"]
 
 [[scene]]
 id = "stacked_info_card"
 priority = 2
 dir = "stacked_info_card"
-tags = ["stack", "vertical", "pill", "text", "border"]
+tags = ["browser", "canonical", "stack", "vertical", "pill", "text", "border"]
 
 [[scene]]
 id = "action_row_variants"
 priority = 3
 dir = "action_row_variants"
-tags = ["stack", "horizontal", "buttons", "variants", "alignment"]
+tags = ["browser", "canonical", "stack", "horizontal", "buttons", "variants", "alignment"]
 
 [[scene]]
 id = "nested_panel_inset"
 priority = 4
 dir = "nested_panel_inset"
-tags = ["nested", "panel", "inset", "radius", "box-model"]
+tags = ["browser", "canonical", "nested", "panel", "inset", "radius", "box-model"]
 
 [[scene]]
 id = "typography_specimen"
 priority = 5
 dir = "typography_specimen"
-tags = ["typography", "text", "weights", "line-height", "colors"]
+tags = ["browser", "canonical", "typography", "text", "weights", "line-height", "colors"]
 
 [[scene]]
 id = "update_toast"
 priority = 6
 dir = "update_toast"
-tags = ["toast", "flex-column", "absolute", "badge", "button", "typography"]
+tags = ["browser", "canonical", "toast", "flex-column", "absolute", "badge", "button", "typography"]
+
+[[scene]]
+id = "supported_contract_micro"
+priority = 10
+dir = "supported_contract_micro"
+tags = ["browser", "micro", "coverage", "selectors", "properties", "values"]
+
+[[scene]]
+id = "settings_row_real"
+priority = 20
+dir = "settings_row_real"
+tags = ["browser", "real-world", "settings", "control"]
+
+[[scene]]
+id = "metric_tile_real"
+priority = 21
+dir = "metric_tile_real"
+tags = ["browser", "real-world", "metric", "typography"]
+
+[[scene]]
+id = "unsupported_selectors_negative"
+priority = 90
+dir = "unsupported_selectors_negative"
+tags = ["negative", "diagnostics", "selectors"]
+
+[[scene]]
+id = "unsupported_declarations_negative"
+priority = 91
+dir = "unsupported_declarations_negative"
+tags = ["negative", "diagnostics", "property", "value"]
