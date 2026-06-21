@@ -7,9 +7,14 @@
 
 use super::*;
 use crate::ir::{
-    BoxSizing, Color, ControlKind, Display, EdgeInset, ExecutionMode, IrNode, Layout, NodeKind,
-    Paint, Position, SceneIr, SourceRef,
+    Border, BoxSizing, Color, ControlKind, Display, EdgeInset, ExecutionMode, IrNode, Layout,
+    NodeKind, Paint, Position, SceneIr, SourceRef,
 };
+use std::path::PathBuf;
+
+fn repo_root() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+}
 
 fn base_layout() -> Layout {
     Layout {
@@ -137,12 +142,12 @@ fn unsupported_capabilities_are_declared_loss_not_silent() {
     let Some(target) = target_or_skip("unsupported_capabilities") else {
         return;
     };
-    // A flex container with a border plus a button child — none of which the
-    // scaffold renders.
+    // A flex container with a border (now rendered) plus a native button child
+    // (still declared loss) and a typographic text node (still declared loss).
     let mut root = node("n0", None);
     root.layout.display = Display::Flex;
     root.paint = paint(Some("#ffffff"));
-    root.paint.border = Some(crate::ir::Border {
+    root.paint.border = Some(Border {
         width: 1.0,
         color: Color("#000000".to_string()),
     });
@@ -157,12 +162,74 @@ fn unsupported_capabilities_are_declared_loss_not_silent() {
         .map(|gap| gap.capability)
         .collect();
 
-    assert!(lost.contains(&Capability::FlexLayout));
-    assert!(lost.contains(&Capability::Border));
+    // The native control is the unsupported family here.
     assert!(lost.contains(&Capability::ButtonControl));
-    // Background is the one capability the scaffold honors, so it is never loss.
+    // Layout and box paint are honored now, so they are never loss.
+    assert!(!lost.contains(&Capability::FlexLayout));
+    assert!(!lost.contains(&Capability::Border));
     assert!(!lost.contains(&Capability::Background));
+    assert!(!lost.contains(&Capability::BlockLayout));
     assert_eq!(target.target_id(), "wgpu");
+}
+
+/// Load a canonical fixture's Scene IR by id.
+fn fixture_scene(id: &str) -> SceneIr {
+    let json = std::fs::read_to_string(
+        repo_root().join(format!("fixtures/v0.1/{id}/expected/scene.semui.json")),
+    )
+    .expect("fixture readable");
+    SceneIr::from_json(&json).expect("fixture parses")
+}
+
+#[test]
+fn profile_card_boxes_rasterize_at_their_resolved_geometry() {
+    let Some(target) = target_or_skip("profile_card_boxes") else {
+        return;
+    };
+    let frame = target
+        .emit(&fixture_scene("profile_card_absolute"))
+        .artifact;
+
+    // Canvas is sized to the resolved extent: the card is 320x180 at (24,20).
+    assert_eq!((frame.width, frame.height), (344, 200));
+
+    // Root card fill (#ffffff) at its center.
+    assert_eq!(frame.pixel(184, 110), [0xff, 0xff, 0xff, 0xff]);
+    // The card's 1px left border (#e5e7eb) at mid-height.
+    assert_eq!(frame.pixel(24, 110), [0xe5, 0xe7, 0xeb, 0xff]);
+
+    // Dark primary button (#111827) center: (237,145) 88x36 → (281,163).
+    assert_eq!(frame.pixel(281, 163), [0x11, 0x18, 0x27, 0xff]);
+
+    // Green status dot (#10b981) center: (45,147) 8x8 → (49,151).
+    assert_eq!(frame.pixel(49, 151), [0x10, 0xb9, 0x81, 0xff]);
+}
+
+#[test]
+fn border_radius_rounds_corners_so_the_background_shows_through() {
+    let Some(target) = target_or_skip("border_radius_rounds") else {
+        return;
+    };
+    let frame = target
+        .emit(&fixture_scene("profile_card_absolute"))
+        .artifact;
+
+    // The avatar n1 (#dbeafe) is 48x48 at (45,41) with radius 999 → a full
+    // circle of radius 24 centered at (69,65).
+    // Center is inside the circle: avatar fill.
+    assert_eq!(frame.pixel(69, 65), [0xdb, 0xea, 0xfe, 0xff]);
+    // The bounding-box corner is outside the circle, so the card behind
+    // (#ffffff) shows through rather than the avatar fill.
+    assert_eq!(frame.pixel(46, 42), [0xff, 0xff, 0xff, 0xff]);
+}
+
+#[test]
+fn box_raster_is_deterministic_across_two_runs() {
+    let Some(target) = target_or_skip("box_raster_deterministic") else {
+        return;
+    };
+    let scene = fixture_scene("profile_card_absolute");
+    assert_eq!(target.emit(&scene).artifact, target.emit(&scene).artifact);
 }
 
 #[test]

@@ -1,23 +1,83 @@
-//! WGPU reference target — headless scaffold (`RET-04`).
+//! WGPU reference target — geometry + box rasterization (`RET-04`, `RET-05`).
 //!
-//! This is the first slice of the non-browser reference renderer required by
-//! `DEC-04`. It stands up a headless GPU device (a real adapter when present,
-//! otherwise a software Vulkan/GL fallback), implements the [`TargetEmitter`]
-//! boundary from `RET-01`, and renders a scene's root background into an
-//! offscreen texture that is read back as exact RGBA bytes.
+//! This is the non-browser reference renderer required by `DEC-04`. It stands up
+//! a headless GPU device (a real adapter when present, otherwise a software
+//! Vulkan/GL fallback), implements the [`TargetEmitter`] boundary from `RET-01`,
+//! and renders a scene into an offscreen texture read back as exact RGBA bytes.
 //!
-//! Only [`Capability::Background`] is rendered here; every other capability a
-//! scene needs is reported as explicit [declared loss](TargetEmission::declared_loss)
-//! rather than silently dropped. Later children (`RET-05`, `RET-06`) raise the
-//! supported set as geometry, primitives, and typography land.
+//! `RET-04` rendered only the root background clear. `RET-05` adds the geometry
+//! pass ([`crate::target::geometry`]) and a box rasterizer: every node whose
+//! border box resolves is painted in pre-order (painter's order, so children
+//! land over parents) with its background fill, a uniform solid border, and a
+//! uniform `border-radius`, via a signed-distance rounded-rect shader.
+//!
+//! The supported capabilities are layout (block, flex, absolute) plus the box
+//! paint families (background, border, radius). Text [`Capability::Typography`]
+//! and [`Capability::ButtonControl`] remain explicit
+//! [declared loss](TargetEmission::declared_loss) until later children land; a
+//! box whose size is content-driven (needs text measurement) does not resolve
+//! and is left unpainted rather than guessed.
 
 use std::error::Error;
 use std::fmt;
 
+use wgpu::util::DeviceExt;
+
 use crate::ir::SceneIr;
+use crate::target::geometry::{BoxRect, canvas_extent, resolve_geometry};
 use crate::target::{
-    Capability, TargetCapabilities, TargetEmission, TargetEmitter, capability_gaps,
+    Capability, TargetCapabilities, TargetEmission, TargetEmitter, capability_gaps, preorder,
 };
+
+/// WGSL for the rounded-rect box rasterizer. The vertex stage expands a per-box
+/// uniform rectangle into a screen quad; the fragment stage evaluates a rounded
+/// rectangle signed-distance field to fill the interior, stroke a uniform
+/// border, and discard outside the (possibly rounded) edge so the background
+/// shows through.
+const BOX_SHADER: &str = r#"
+struct BoxUniform {
+    rect: vec4<f32>,    // x, y, w, h in pixels, top-left origin
+    fill: vec4<f32>,    // rgba 0..1; alpha 0 means no fill
+    border: vec4<f32>,  // rgba 0..1
+    params: vec4<f32>,  // radius, border_width, canvas_w, canvas_h
+};
+@group(0) @binding(0) var<uniform> u: BoxUniform;
+
+@vertex
+fn vs_main(@builtin(vertex_index) vi: u32) -> @builtin(position) vec4<f32> {
+    var corners = array<vec2<f32>, 6>(
+        vec2<f32>(0.0, 0.0), vec2<f32>(1.0, 0.0), vec2<f32>(0.0, 1.0),
+        vec2<f32>(0.0, 1.0), vec2<f32>(1.0, 0.0), vec2<f32>(1.0, 1.0),
+    );
+    let px = u.rect.xy + corners[vi] * u.rect.zw;
+    let ndc = vec2<f32>(px.x / u.params.z * 2.0 - 1.0, 1.0 - px.y / u.params.w * 2.0);
+    return vec4<f32>(ndc, 0.0, 1.0);
+}
+
+fn rounded_sdf(p: vec2<f32>, half: vec2<f32>, r: f32) -> f32 {
+    let q = abs(p) - (half - vec2<f32>(r, r));
+    return length(max(q, vec2<f32>(0.0, 0.0))) + min(max(q.x, q.y), 0.0) - r;
+}
+
+@fragment
+fn fs_main(@builtin(position) frag: vec4<f32>) -> @location(0) vec4<f32> {
+    let half = u.rect.zw * 0.5;
+    let center = u.rect.xy + half;
+    let r = clamp(u.params.x, 0.0, min(half.x, half.y));
+    let d = rounded_sdf(frag.xy - center, half, r);
+    if (d > 0.0) {
+        discard;
+    }
+    let border_width = u.params.y;
+    if (border_width > 0.0 && d > -border_width) {
+        return u.border;
+    }
+    if (u.fill.a <= 0.0) {
+        discard;
+    }
+    return u.fill;
+}
+"#;
 
 /// Edge length of the square offscreen canvas the scaffold renders into.
 ///
@@ -75,6 +135,8 @@ pub struct WgpuTarget {
     queue: wgpu::Queue,
     backend: wgpu::Backend,
     adapter_name: String,
+    box_pipeline: wgpu::RenderPipeline,
+    box_bind_layout: wgpu::BindGroupLayout,
 }
 
 impl WgpuTarget {
@@ -110,11 +172,14 @@ impl WgpuTarget {
             )
             .await
             .map_err(WgpuTargetError::RequestDevice)?;
+        let (box_pipeline, box_bind_layout) = build_box_pipeline(&device);
         Ok(Self {
             device,
             queue,
             backend: info.backend,
             adapter_name: info.name,
+            box_pipeline,
+            box_bind_layout,
         })
     }
 
@@ -135,13 +200,22 @@ impl WgpuTarget {
         &self.adapter_name
     }
 
-    /// Render the scene's root background into the offscreen canvas and read it
-    /// back as exact RGBA. Deterministic: a clear to a fixed color.
-    fn render_background(&self, scene: &SceneIr) -> RenderedFrame {
+    /// Render `scene` into the offscreen canvas and read it back as exact RGBA.
+    ///
+    /// The canvas is sized to the bounding extent of the resolved geometry (or a
+    /// default square when nothing resolves, e.g. a background-only scene). The
+    /// page is cleared to the root background, then every node with a resolvable
+    /// border box and visible paint is drawn in pre-order. Deterministic: fixed
+    /// geometry and a fixed pipeline yield identical bytes across runs.
+    fn render(&self, scene: &SceneIr) -> RenderedFrame {
+        let boxes = resolve_geometry(scene);
+        let (width, height) = canvas_extent(&boxes).unwrap_or((CANVAS, CANVAS));
+        let draws = self.box_draws(scene, &boxes, width, height);
+
         let clear = root_clear_color(scene);
         let size = wgpu::Extent3d {
-            width: CANVAS,
-            height: CANVAS,
+            width,
+            height,
             depth_or_array_layers: 1,
         };
         let texture = self.device.create_texture(&wgpu::TextureDescriptor {
@@ -163,8 +237,8 @@ impl WgpuTarget {
                 label: Some("semui-encoder"),
             });
         {
-            let _pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                label: Some("semui-clear"),
+            let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                label: Some("semui-boxes"),
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                     view: &view,
                     resolve_target: None,
@@ -177,14 +251,76 @@ impl WgpuTarget {
                 timestamp_writes: None,
                 occlusion_query_set: None,
             });
+            if !draws.is_empty() {
+                pass.set_pipeline(&self.box_pipeline);
+                for bind_group in &draws {
+                    pass.set_bind_group(0, bind_group, &[]);
+                    pass.draw(0..6, 0..1);
+                }
+            }
         }
 
         let rgba = self.read_back(&mut encoder, &texture, size);
         RenderedFrame {
-            width: CANVAS,
-            height: CANVAS,
+            width,
+            height,
             rgba,
         }
+    }
+
+    /// Build a per-box bind group (a uniform buffer of geometry + paint) for
+    /// every node with a resolved border box and visible paint, in pre-order so
+    /// the draw order is painter's order.
+    fn box_draws(
+        &self,
+        scene: &SceneIr,
+        boxes: &std::collections::BTreeMap<String, BoxRect>,
+        canvas_w: u32,
+        canvas_h: u32,
+    ) -> Vec<wgpu::BindGroup> {
+        let mut draws = Vec::new();
+        for node in preorder(scene) {
+            let Some(rect) = boxes.get(&node.id) else {
+                continue;
+            };
+            let fill = node
+                .paint
+                .background_color
+                .as_ref()
+                .and_then(|c| parse_hex(&c.0));
+            let border = node.paint.border.as_ref();
+            let border_rgb = border.and_then(|b| parse_hex(&b.color.0));
+            // Nothing visible to paint: skip (e.g. an invisible text-holder box).
+            if fill.is_none() && border_rgb.is_none() {
+                continue;
+            }
+            let uniform = box_uniform_bytes(
+                *rect,
+                fill,
+                border_rgb,
+                border.map(|b| b.width).unwrap_or(0.0),
+                node.paint.border_radius.unwrap_or(0.0),
+                canvas_w,
+                canvas_h,
+            );
+            let buffer = self
+                .device
+                .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                    label: Some("semui-box-uniform"),
+                    contents: &uniform,
+                    usage: wgpu::BufferUsages::UNIFORM,
+                });
+            let bind_group = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
+                label: Some("semui-box-bind"),
+                layout: &self.box_bind_layout,
+                entries: &[wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: buffer.as_entire_binding(),
+                }],
+            });
+            draws.push(bind_group);
+        }
+        draws
     }
 
     /// Copy `texture` to a mappable buffer, submit, and read tightly packed RGBA.
@@ -255,17 +391,128 @@ impl TargetEmitter for WgpuTarget {
     }
 
     fn capabilities(&self) -> TargetCapabilities {
-        // The scaffold renders only the background clear; everything else is
-        // declared loss until later RET-02 children implement it.
-        TargetCapabilities::from_capabilities([Capability::Background])
+        // Layout and box paint are rendered; text and native controls remain
+        // declared loss until later RET-02 children implement them.
+        TargetCapabilities::from_capabilities([
+            Capability::BlockLayout,
+            Capability::FlexLayout,
+            Capability::AbsolutePositioning,
+            Capability::Background,
+            Capability::Border,
+            Capability::BorderRadius,
+        ])
     }
 
     fn emit(&self, scene: &SceneIr) -> TargetEmission<RenderedFrame> {
         TargetEmission {
-            artifact: self.render_background(scene),
+            artifact: self.render(scene),
             declared_loss: capability_gaps(scene, &self.capabilities()),
         }
     }
+}
+
+/// Build the rounded-rect box pipeline and its single-uniform bind group layout.
+fn build_box_pipeline(device: &wgpu::Device) -> (wgpu::RenderPipeline, wgpu::BindGroupLayout) {
+    let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+        label: Some("semui-box-shader"),
+        source: wgpu::ShaderSource::Wgsl(BOX_SHADER.into()),
+    });
+    let bind_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+        label: Some("semui-box-bind-layout"),
+        entries: &[wgpu::BindGroupLayoutEntry {
+            binding: 0,
+            visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
+            ty: wgpu::BindingType::Buffer {
+                ty: wgpu::BufferBindingType::Uniform,
+                has_dynamic_offset: false,
+                min_binding_size: None,
+            },
+            count: None,
+        }],
+    });
+    let layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+        label: Some("semui-box-pipeline-layout"),
+        bind_group_layouts: &[&bind_layout],
+        push_constant_ranges: &[],
+    });
+    let pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+        label: Some("semui-box-pipeline"),
+        layout: Some(&layout),
+        vertex: wgpu::VertexState {
+            module: &shader,
+            entry_point: "vs_main",
+            buffers: &[],
+            compilation_options: Default::default(),
+        },
+        fragment: Some(wgpu::FragmentState {
+            module: &shader,
+            entry_point: "fs_main",
+            targets: &[Some(wgpu::ColorTargetState {
+                format: wgpu::TextureFormat::Rgba8Unorm,
+                // Opaque writes; the shader discards rather than blends, so bytes
+                // stay exact and deterministic.
+                blend: None,
+                write_mask: wgpu::ColorWrites::ALL,
+            })],
+            compilation_options: Default::default(),
+        }),
+        primitive: wgpu::PrimitiveState::default(),
+        depth_stencil: None,
+        multisample: wgpu::MultisampleState::default(),
+        multiview: None,
+        cache: None,
+    });
+    (pipeline, bind_layout)
+}
+
+/// Pack one box's geometry and paint into the 64-byte uniform the shader reads.
+/// Colors are normalized to `0..1`; a missing fill is alpha 0 (the shader
+/// discards the interior), a missing border is width 0.
+fn box_uniform_bytes(
+    rect: BoxRect,
+    fill: Option<[u8; 3]>,
+    border: Option<[u8; 3]>,
+    border_width: f32,
+    radius: f32,
+    canvas_w: u32,
+    canvas_h: u32,
+) -> [u8; 64] {
+    let fill_rgba = match fill {
+        Some([r, g, b]) => [norm(r), norm(g), norm(b), 1.0],
+        None => [0.0, 0.0, 0.0, 0.0],
+    };
+    let border_rgba = match border {
+        Some([r, g, b]) => [norm(r), norm(g), norm(b), 1.0],
+        None => [0.0, 0.0, 0.0, 0.0],
+    };
+    let floats: [f32; 16] = [
+        rect.x,
+        rect.y,
+        rect.width,
+        rect.height,
+        fill_rgba[0],
+        fill_rgba[1],
+        fill_rgba[2],
+        fill_rgba[3],
+        border_rgba[0],
+        border_rgba[1],
+        border_rgba[2],
+        border_rgba[3],
+        radius,
+        border_width,
+        canvas_w as f32,
+        canvas_h as f32,
+    ];
+    let mut bytes = [0u8; 64];
+    for (i, f) in floats.iter().enumerate() {
+        bytes[i * 4..i * 4 + 4].copy_from_slice(&f.to_le_bytes());
+    }
+    bytes
+}
+
+/// A single color channel byte normalized to the `0.0..=1.0` shader range.
+fn norm(channel: u8) -> f32 {
+    channel as f32 / 255.0
 }
 
 /// The clear color for a scene: the root node's background, or opaque white when
