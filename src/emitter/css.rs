@@ -21,9 +21,10 @@ pub fn build_css(nodes: &[IrNode]) -> String {
 fn emit_rule(node: &IrNode) -> Option<String> {
     let mut decls: Vec<String> = Vec::new();
     // Reset native browser chrome for interactive controls before any layout
-    // or paint declarations. `appearance` is not in the v0.1 cascade subset so
-    // it is never stored in the IR, but every button must opt out of it to avoid
-    // OS-level gradients, inset borders, and text-baseline drift on round-trip.
+    // or paint declarations. The supported source policy accepts only the
+    // explicit `none` reset; it is not stored in IR because every control is
+    // canonicalized to this value on output. This avoids OS-level gradients,
+    // inset borders, and text-baseline drift on round-trip.
     if node.kind == NodeKind::Control {
         decls.push("appearance: none".to_owned());
     }

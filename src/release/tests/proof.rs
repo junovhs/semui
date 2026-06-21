@@ -2,8 +2,11 @@
 
 use std::path::PathBuf;
 
+use crate::diagnostics::{Diagnostic, DiagnosticKind};
 use crate::ir::SceneIr;
 use crate::release::{build_golden_artifacts, run_corpus_proof, write_golden_artifacts};
+
+use super::super::validate_diagnostic_expectations;
 
 fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -69,6 +72,22 @@ fn corpus_has_nonzero_ir_nodes() -> Result<(), Box<dyn std::error::Error>> {
     let proof = run_corpus_proof(repo_root())?;
     assert!(proof.total_ir_nodes() > 0);
     Ok(())
+}
+
+#[test]
+fn unexpected_diagnostic_fails_the_fixture_contract() {
+    let diagnostic = Diagnostic {
+        kind: DiagnosticKind::UnsupportedValue,
+        message: "unsupported display".to_owned(),
+        rule_id: 0,
+        selector: Some(".hidden".to_owned()),
+        property: Some("display".to_owned()),
+        value: Some("none".to_owned()),
+    };
+
+    let error = validate_diagnostic_expectations("test", &[diagnostic], "")
+        .expect_err("an undocumented diagnostic must fail release proof");
+    assert!(error.contains("unsupported-value:display=none"));
 }
 
 // ---------------------------------------------------------------------------

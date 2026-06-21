@@ -14,28 +14,10 @@ fn repo_root() -> PathBuf {
 // ---------------------------------------------------------------------------
 
 #[test]
-fn profile_card_has_exactly_one_unsupported_property() -> Result<(), Box<dyn std::error::Error>> {
+fn profile_card_produces_no_diagnostics() -> Result<(), Box<dyn std::error::Error>> {
     let graph = load_scene_source_graph(repo_root(), "profile_card_absolute")?;
     let diags = analyze(&graph);
-
-    let unsupported_props: Vec<_> = diags
-        .iter()
-        .filter(|d| d.kind == DiagnosticKind::UnsupportedProperty)
-        .collect();
-
-    // The only unsupported property in this fixture is `appearance: none`
-    assert_eq!(
-        unsupported_props.len(),
-        1,
-        "expected 1 UnsupportedProperty, got {}: {unsupported_props:?}",
-        unsupported_props.len()
-    );
-    assert_eq!(
-        unsupported_props[0].property.as_deref(),
-        Some("appearance"),
-        "expected appearance, got {:?}",
-        unsupported_props[0].property
-    );
+    assert!(diags.is_empty(), "unexpected diagnostics: {diags:?}");
     Ok(())
 }
 
@@ -89,22 +71,15 @@ fn stacked_info_card_produces_no_diagnostics() -> Result<(), Box<dyn std::error:
 }
 
 // ---------------------------------------------------------------------------
-// action_row_variants also uses `appearance`
+// action_row_variants uses the supported `appearance: none` reset
 // ---------------------------------------------------------------------------
 
 #[test]
-fn action_row_has_appearance_unsupported_property() -> Result<(), Box<dyn std::error::Error>> {
+fn action_row_produces_no_diagnostics() -> Result<(), Box<dyn std::error::Error>> {
     let graph = load_scene_source_graph(repo_root(), "action_row_variants")?;
     let diags = analyze(&graph);
 
-    let has_appearance = diags
-        .iter()
-        .any(|d| d.property.as_deref() == Some("appearance"));
-
-    assert!(
-        has_appearance,
-        "expected appearance diagnostic; got: {diags:?}"
-    );
+    assert!(diags.is_empty(), "unexpected diagnostics: {diags:?}");
     Ok(())
 }
 

@@ -29,6 +29,9 @@ pub fn apply_declaration(style: &mut ComputedStyle, property: &str, value: &str)
         ),
         "background" => style.background_color = parse_color(value),
         "border" => expand_border(style, value),
+        // `appearance: none` is an accepted source-level reset. It has no IR
+        // field because controls are always emitted with the canonical reset.
+        "appearance" => {}
 
         // --- Position / layout longhands ---
         "position" => style.position = value.to_owned(),

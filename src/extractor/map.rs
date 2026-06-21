@@ -75,8 +75,11 @@ fn to_position(s: &str) -> Position {
 
 fn to_display(s: &str) -> Display {
     match s {
+        "block" => Display::Block,
         "flex" => Display::Flex,
         "inline-flex" => Display::InlineFlex,
+        // Unsupported values (including `none`) are diagnosed at the source
+        // boundary and normalize to the CSS initial value.
         _ => Display::Block,
     }
 }

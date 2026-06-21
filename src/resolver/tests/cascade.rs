@@ -54,6 +54,14 @@ fn apply_display_sets_field() {
 }
 
 #[test]
+fn appearance_none_is_an_explicit_noop_for_ir_state() {
+    let mut style = ComputedStyle::default();
+    let baseline = style.clone();
+    apply_declaration(&mut style, "appearance", "none");
+    assert_eq!(style, baseline);
+}
+
+#[test]
 fn apply_color_normalizes_hex() {
     let mut s = ComputedStyle::default();
     apply_declaration(&mut s, "color", "#1D4ED8");

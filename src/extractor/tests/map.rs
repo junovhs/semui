@@ -3,6 +3,7 @@
 use crate::HtmlNode;
 use crate::HtmlNodeKind;
 use crate::extractor::map;
+use crate::ir::layout::Display;
 use crate::ir::typography::LineHeight as TLineHeight;
 use crate::layout::{LaidOutScene, compute_layout};
 use crate::resolver::ComputedStyle;
@@ -66,6 +67,17 @@ fn to_layout_static_has_no_explicit_coords() {
     let layout = map::to_layout(&style, geo);
     assert_eq!(layout.left, None);
     assert_eq!(layout.top, None);
+}
+
+#[test]
+fn unsupported_display_none_normalizes_to_block() {
+    let style = ComputedStyle {
+        display: "none".to_owned(),
+        ..ComputedStyle::default()
+    };
+    let scene = laid_out_single(style.clone());
+    let layout = map::to_layout(&style, &scene.nodes[0].geometry);
+    assert_eq!(layout.display, Display::Block);
 }
 
 // --- to_paint ---

@@ -126,6 +126,7 @@ const KNOWN_PROPERTIES: &[&str] = &[
     "padding",
     "background",
     "border",
+    "appearance",
     "position",
     "display",
     "box-sizing",
@@ -164,10 +165,15 @@ fn is_known_property(property: &str) -> bool {
 }
 
 /// Returns a diagnostic message when a known property has a value we cannot
-/// map. Currently checks `position` and `display` — the highest-impact
-/// properties to silently mis-render.
+/// map. These are the policy edges most likely to silently mis-render.
 fn unsupported_value_message(property: &str, value: &str) -> Option<String> {
     match property {
+        "appearance" => match value {
+            "none" | "inherit" => None,
+            _ => Some(format!(
+                "appearance: '{value}' is not supported in v0.1; only the explicit 'none' reset is accepted"
+            )),
+        },
         "position" => match value {
             "static" | "absolute" | "inherit" => None,
             _ => Some(format!(
@@ -175,7 +181,7 @@ fn unsupported_value_message(property: &str, value: &str) -> Option<String> {
             )),
         },
         "display" => match value {
-            "block" | "flex" | "inline-flex" | "none" | "inherit" => None,
+            "block" | "flex" | "inline-flex" | "inherit" => None,
             _ => Some(format!(
                 "display: '{value}' is not supported in v0.1; treated as block"
             )),

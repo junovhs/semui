@@ -1,0 +1,1 @@
+# No diagnostics expected. The scene is inside the v0.1 source contract.

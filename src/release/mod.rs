@@ -9,7 +9,7 @@ mod tests;
 
 use std::path::Path;
 
-use crate::diagnostics::analyze;
+use crate::diagnostics::{Diagnostic, DiagnosticKind, analyze};
 use crate::emitter::{EmittedScene, emit};
 use crate::extractor::extract_ir;
 use crate::ir::SceneIr;
@@ -80,7 +80,18 @@ pub fn run_corpus_proof(
         let laid_out = compute_layout(&resolved);
         let ir = extract_ir(&laid_out, &graph)?;
 
-        let diagnostic_count = analyze(&graph).len();
+        let diagnostics = analyze(&graph);
+        let expected_diagnostics_path = repo_root
+            .as_ref()
+            .join("fixtures")
+            .join("v0.1")
+            .join(&scene.dir)
+            .join("expected")
+            .join("diagnostics.txt");
+        let expected_diagnostics = std::fs::read_to_string(&expected_diagnostics_path)?;
+        validate_diagnostic_expectations(&scene_id, &diagnostics, &expected_diagnostics)
+            .map_err(|message| std::io::Error::new(std::io::ErrorKind::InvalidData, message))?;
+        let diagnostic_count = diagnostics.len();
 
         let vr = verify_round_trip(&graph)?;
 
@@ -97,6 +108,48 @@ pub fn run_corpus_proof(
         corpus: "v0.1".to_owned(),
         scenes,
     })
+}
+
+fn diagnostic_key(diagnostic: &Diagnostic) -> String {
+    match diagnostic.kind {
+        DiagnosticKind::UnsupportedProperty => format!(
+            "unsupported-property:{}",
+            diagnostic.property.as_deref().unwrap_or("<missing>")
+        ),
+        DiagnosticKind::UnsupportedValue => format!(
+            "unsupported-value:{}={}",
+            diagnostic.property.as_deref().unwrap_or("<missing>"),
+            diagnostic.value.as_deref().unwrap_or("<missing>")
+        ),
+        DiagnosticKind::UnsupportedSelector => format!(
+            "unsupported-selector:{}",
+            diagnostic.selector.as_deref().unwrap_or("<missing>")
+        ),
+    }
+}
+
+fn validate_diagnostic_expectations(
+    scene_id: &str,
+    diagnostics: &[Diagnostic],
+    expected_file: &str,
+) -> Result<(), String> {
+    let mut expected: Vec<String> = expected_file
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty() && !line.starts_with('#'))
+        .map(str::to_owned)
+        .collect();
+    let mut actual: Vec<String> = diagnostics.iter().map(diagnostic_key).collect();
+    expected.sort();
+    actual.sort();
+
+    if actual == expected {
+        Ok(())
+    } else {
+        Err(format!(
+            "diagnostic contract failed for '{scene_id}': expected {expected:?}, actual {actual:?}"
+        ))
+    }
 }
 
 // ---------------------------------------------------------------------------

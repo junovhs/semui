@@ -60,11 +60,11 @@ fn fake_graph(rules: Vec<CssRule>) -> SceneSourceGraph {
 
 #[test]
 fn unknown_property_produces_unsupported_property_diagnostic() {
-    let graph = fake_graph(vec![rule(0, &[".foo"], &[("appearance", "none")])]);
+    let graph = fake_graph(vec![rule(0, &[".foo"], &[("transform", "none")])]);
     let diags = analyze(&graph);
     assert_eq!(diags.len(), 1);
     assert_eq!(diags[0].kind, DiagnosticKind::UnsupportedProperty);
-    assert_eq!(diags[0].property.as_deref(), Some("appearance"));
+    assert_eq!(diags[0].property.as_deref(), Some("transform"));
 }
 
 #[test]
@@ -99,6 +99,29 @@ fn display_grid_produces_unsupported_value_diagnostic() {
     assert_eq!(diags.len(), 1);
     assert_eq!(diags[0].kind, DiagnosticKind::UnsupportedValue);
     assert_eq!(diags[0].value.as_deref(), Some("grid"));
+}
+
+#[test]
+fn display_none_produces_unsupported_value_diagnostic() {
+    let graph = fake_graph(vec![rule(0, &[".foo"], &[("display", "none")])]);
+    let diags = analyze(&graph);
+    assert_eq!(diags.len(), 1);
+    assert_eq!(diags[0].kind, DiagnosticKind::UnsupportedValue);
+    assert_eq!(diags[0].value.as_deref(), Some("none"));
+}
+
+#[test]
+fn appearance_none_is_supported_no_diagnostic() {
+    let graph = fake_graph(vec![rule(0, &["button"], &[("appearance", "none")])]);
+    assert!(analyze(&graph).is_empty());
+}
+
+#[test]
+fn unsupported_appearance_value_produces_diagnostic() {
+    let graph = fake_graph(vec![rule(0, &["button"], &[("appearance", "auto")])]);
+    let diags = analyze(&graph);
+    assert_eq!(diags.len(), 1);
+    assert_eq!(diags[0].kind, DiagnosticKind::UnsupportedValue);
 }
 
 #[test]
