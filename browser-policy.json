@@ -50,5 +50,11 @@
     "font-size",
     "line-height"
   ],
-  "numeric_tolerance_px": 1
+  "numeric_tolerance_px": 1,
+  "visual": {
+    "channel_delta_threshold": 0,
+    "max_differing_pixel_ratio": 0.005,
+    "max_diff_region_width": 8,
+    "max_diff_region_height": 8
+  }
 }
