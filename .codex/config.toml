@@ -1,0 +1,7 @@
+[mcp_servers.ishoo]
+command = "ishoo"
+args = ["mcp"]
+
+[mcp_servers.semmap]
+command = "semmap"
+args = ["mcp"]
