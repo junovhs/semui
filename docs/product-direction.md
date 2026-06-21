@@ -43,6 +43,29 @@ The project succeeds when:
 Supporting every browser feature or every runtime is not required. The contract
 is bounded portability: declared inputs, explicit loss, and measurable output.
 
+## Target emitter contract
+
+`src/target/` defines the runtime-neutral boundary every adapter consumes
+(`RET-01`). It is the executable form of criterion 4:
+
+- `TargetEmitter` receives only `&SceneIr`, so a target structurally cannot
+  reparse source HTML/CSS — it consumes the resolved IR per `DEC-04`.
+- A `Capability` model describes what a scene requires and what a target
+  supports. Constructs a target cannot honor are reported as `CapabilityGap`
+  declared loss, never dropped silently.
+- `SceneResources` is the resource contract: the distinct font stacks (with
+  weights) and colors a target must provision.
+- `Conventions` fixes the shared interpretation: CSS-pixel lengths, a top-left
+  origin with `y` growing downward, per-node box-sizing, and ordered
+  font-family fallback.
+- `ConformanceScene` is the runtime-neutral conformance fixture format — the
+  per-node observable contract with source provenance stripped — that `RET-03`
+  compares a target's observed render against.
+
+The HTML reference emitter (`HtmlTarget`) implements this interface and is
+artifact-equivalent to the strict emitter, so the boundary adds capability and
+loss reporting without changing reference output.
+
 ## Sequencing
 
 Fidelity comes before portability because every target otherwise inherits an

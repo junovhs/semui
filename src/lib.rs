@@ -7,6 +7,7 @@ pub mod layout;
 pub mod release;
 pub mod resolver;
 mod source_graph;
+pub mod target;
 pub mod verification;
 
 pub use fixture_manifest::{
