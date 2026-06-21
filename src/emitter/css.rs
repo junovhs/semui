@@ -10,11 +10,13 @@ use crate::ir::{IrNode, NodeKind};
 
 /// Emit a complete `<style>` block for all non-Text nodes in `nodes`.
 pub fn build_css(nodes: &[IrNode]) -> String {
-    let rules: Vec<String> = nodes
-        .iter()
-        .filter(|n| n.kind != NodeKind::Text)
-        .filter_map(emit_rule)
-        .collect();
+    let mut rules = vec!["body {\n  margin: 0;\n}".to_owned()];
+    rules.extend(
+        nodes
+            .iter()
+            .filter(|n| n.kind != NodeKind::Text)
+            .filter_map(emit_rule),
+    );
     rules.join("\n\n")
 }
 
@@ -27,6 +29,12 @@ fn emit_rule(node: &IrNode) -> Option<String> {
     // inset borders, and text-baseline drift on round-trip.
     if node.kind == NodeKind::Control {
         decls.push("appearance: none".to_owned());
+        if node.paint.border.is_none() {
+            decls.push("border: 0".to_owned());
+        }
+        if node.layout.padding == EdgeInset::zero() {
+            decls.push("padding: 0".to_owned());
+        }
     }
     decls.extend(layout_decls(&node.layout));
     decls.extend(paint_decls(&node.paint));

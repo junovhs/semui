@@ -26,5 +26,11 @@ npm test -- --output /tmp/semui-browser-evidence.json
 locale, timezone, motion/color policy, and locally bundled Inter font files.
 The harness blocks all network requests, renders both source and emitted
 artifacts twice, and fails unless each pair of captures has identical DOM and
-PNG hashes. It records evidence but does not compare source against emitted;
-computed-style, geometry, and visual comparison belong to later oracle work.
+PNG hashes. It compares source against emitted structure, computed styles, and
+geometry; source-versus-emitted pixel comparison belongs to later oracle work.
+
+The harness also records browser observations for every Scene IR element using
+stable preorder identities. Exact supported computed styles and numeric styles
+within the `1px` loss budget are compared separately from DOM rectangle
+geometry. A built-in mutation self-test proves that style and geometry drift
+fail with node/property-specific evidence.

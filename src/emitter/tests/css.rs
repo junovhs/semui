@@ -76,9 +76,22 @@ fn box_node(id: &str, layout: Layout, paint: Paint) -> IrNode {
 // --- appearance reset ---
 
 #[test]
+fn stylesheet_resets_body_margin() {
+    let css = build_css(&[]);
+    assert_eq!(css, "body {\n  margin: 0;\n}");
+}
+
+#[test]
 fn button_control_emits_appearance_none() {
     let css = build_css(&[control_node("n0")]);
     assert!(css.contains("appearance: none"), "css={css}");
+}
+
+#[test]
+fn button_control_resets_omitted_border_and_zero_padding() {
+    let css = build_css(&[control_node("n0")]);
+    assert!(css.contains("border: 0"), "css={css}");
+    assert!(css.contains("padding: 0"), "css={css}");
 }
 
 #[test]
@@ -163,8 +176,8 @@ fn border_box_emitted() {
 fn zero_margin_not_emitted() {
     let css = build_css(&[box_node("n0", default_layout(), default_paint())]);
     assert!(
-        !css.contains("margin"),
-        "zero margin must not appear: css={css}"
+        !css.contains(".n0"),
+        "zero node margin must not create a node rule: css={css}"
     );
 }
 
@@ -263,17 +276,17 @@ fn text_node_produces_no_css_rule() {
         source: source_ref(),
     };
     let css = build_css(&[text_node]);
-    assert!(css.is_empty(), "text node must not produce CSS: css={css}");
+    assert_eq!(css, "body {\n  margin: 0;\n}");
 }
 
 #[test]
 fn empty_rule_is_omitted() {
     // A node with all defaults (static, block, content-box, no paint, no typo)
-    // has nothing to emit → the CSS output should be empty.
+    // has nothing to emit beyond the global page-frame reset.
     let css = build_css(&[box_node("n0", default_layout(), default_paint())]);
     assert!(
-        css.is_empty(),
-        "all-default node must produce no CSS: css={css}"
+        !css.contains(".n0"),
+        "all-default node must produce no node CSS: css={css}"
     );
 }
 

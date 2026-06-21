@@ -73,7 +73,8 @@ function inlineDocument(html, css, fontCss) {
   const style = `<style data-semui-browser-proof>${deterministicCss}\n${css}</style>`;
   const linked = /<link\b[^>]*rel=["']stylesheet["'][^>]*>/i;
   if (linked.test(html)) return html.replace(linked, style);
-  return html.replace(/<\/head>/i, `${style}</head>`);
+  if (/<\/head>/i.test(html)) return html.replace(/<\/head>/i, `${style}</head>`);
+  return `<!doctype html><html lang="en"><head>${style}</head><body>${html}</body></html>`;
 }
 
 async function capture(context, document) {
@@ -86,6 +87,38 @@ async function capture(context, document) {
   });
   await page.setContent(document, { waitUntil: "load" });
   await page.evaluate(() => document.fonts.ready);
+  const observations = await page.locator("body *").evaluateAll(
+    (elements, styleProperties) =>
+      elements.map((element, index) => {
+        const style = getComputedStyle(element);
+        const rect = element.getBoundingClientRect();
+        let current = element;
+        const path = [];
+        while (current !== document.body) {
+          path.push(Array.prototype.indexOf.call(current.parentElement.children, current));
+          current = current.parentElement;
+        }
+        return {
+          id: `node[${index}]`,
+          path: path.reverse().join("/"),
+          tag: element.tagName.toLowerCase(),
+          kind: element.tagName.toLowerCase() === "button" ? "control" : "box",
+          has_text: Array.from(element.childNodes).some(
+            (node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== "",
+          ),
+          styles: Object.fromEntries(
+            styleProperties.map((property) => [property, style.getPropertyValue(property)]),
+          ),
+          geometry: {
+            x: rect.x,
+            y: rect.y,
+            width: rect.width,
+            height: rect.height,
+          },
+        };
+      }),
+    [...policy.exact_computed_styles, ...policy.numeric_computed_styles],
+  );
   const screenshot = await page.screenshot({
     animations: "disabled",
     caret: "hide",
@@ -98,6 +131,7 @@ async function capture(context, document) {
   return {
     screenshot_sha256: sha256(screenshot),
     dom_sha256: sha256(dom),
+    observations,
   };
 }
 
@@ -108,7 +142,104 @@ async function captureDeterministically(context, document, label) {
   return first;
 }
 
+function gate(details) {
+  return { status: details.length === 0 ? "pass" : "fail", details };
+}
+
+function numericValue(value) {
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function compareObservations(source, emitted) {
+  const identity = [];
+  const computedStyle = [];
+  const geometry = [];
+  if (source.length !== emitted.length) {
+    identity.push(`node count: source=${source.length} emitted=${emitted.length}`);
+  }
+  for (let index = 0; index < Math.min(source.length, emitted.length); index += 1) {
+    const left = source[index];
+    const right = emitted[index];
+    for (const field of ["id", "path", "kind"]) {
+      if (left[field] !== right[field]) {
+        identity.push(`${left.id}.${field}: ${JSON.stringify(left[field])} -> ${JSON.stringify(right[field])}`);
+      }
+    }
+    for (const property of policy.exact_computed_styles) {
+      if (["font-family", "font-weight", "color"].includes(property) && !left.has_text && !right.has_text) {
+        continue;
+      }
+      if (left.styles[property] !== right.styles[property]) {
+        computedStyle.push(
+          `${left.id}.style.${property}: ${JSON.stringify(left.styles[property])} -> ${JSON.stringify(right.styles[property])}`,
+        );
+      }
+    }
+    for (const property of policy.numeric_computed_styles) {
+      if (["font-size", "line-height"].includes(property) && !left.has_text && !right.has_text) {
+        continue;
+      }
+      const a = numericValue(left.styles[property]);
+      const b = numericValue(right.styles[property]);
+      const equalKeywords = a === null && b === null && left.styles[property] === right.styles[property];
+      if (!equalKeywords && (a === null || b === null || Math.abs(a - b) > policy.numeric_tolerance_px)) {
+        computedStyle.push(
+          `${left.id}.style.${property}: ${JSON.stringify(left.styles[property])} -> ${JSON.stringify(right.styles[property])}`,
+        );
+      }
+    }
+    for (const field of ["x", "y", "width", "height"]) {
+      const a = left.geometry[field];
+      const b = right.geometry[field];
+      if (Math.abs(a - b) > policy.numeric_tolerance_px) {
+        geometry.push(`${left.id}.geometry.${field}: ${a} -> ${b}`);
+      }
+    }
+  }
+  return {
+    identity: gate(identity),
+    computed_style: gate(computedStyle),
+    geometry: gate(geometry),
+  };
+}
+
+function comparatorSelfTest() {
+  const baseline = [
+    {
+      id: "node[0]",
+      path: "",
+      tag: "body",
+      kind: "box",
+      has_text: false,
+      styles: Object.fromEntries(
+        [...policy.exact_computed_styles, ...policy.numeric_computed_styles].map((key) => [
+          key,
+          policy.numeric_computed_styles.includes(key) ? "10px" : "same",
+        ]),
+      ),
+      geometry: { x: 0, y: 0, width: 100, height: 100 },
+    },
+  ];
+  const styleMutation = structuredClone(baseline);
+  styleMutation[0].styles.display = "grid";
+  const styleResult = compareObservations(baseline, styleMutation);
+  assert.equal(styleResult.computed_style.status, "fail");
+  assert.match(styleResult.computed_style.details[0], /node\[0\]\.style\.display/);
+
+  const geometryMutation = structuredClone(baseline);
+  geometryMutation[0].geometry.width += policy.numeric_tolerance_px + 0.1;
+  const geometryResult = compareObservations(baseline, geometryMutation);
+  assert.equal(geometryResult.geometry.status, "fail");
+  assert.match(geometryResult.geometry.details[0], /node\[0\]\.geometry\.width/);
+
+  const toleratedMutation = structuredClone(baseline);
+  toleratedMutation[0].styles.width = `${10 + policy.numeric_tolerance_px}px`;
+  assert.equal(compareObservations(baseline, toleratedMutation).computed_style.status, "pass");
+}
+
 assert.equal(packageJson.devDependencies.playwright, policy.playwright_version);
+comparatorSelfTest();
 const fonts = await fontEnvironment();
 const manifest = await readFile(path.join(repoRoot, "fixtures", "v0.1", "manifest.toml"), "utf8");
 const scenes = sceneEntries(manifest);
@@ -152,18 +283,30 @@ try {
     const emittedHtml = await readFile(path.join(sceneRoot, "expected", "roundtrip.html"), "utf8");
     const emittedCss = await readFile(path.join(sceneRoot, "expected", "roundtrip.css"), "utf8");
 
-    captures.push({
-      scene_id: scene.id,
-      source: await captureDeterministically(
+    const source = await captureDeterministically(
         context,
         inlineDocument(sourceHtml, sourceCss, fonts.css),
         `${scene.id} source`,
-      ),
-      emitted: await captureDeterministically(
+      );
+    const emitted = await captureDeterministically(
         context,
         inlineDocument(emittedHtml, emittedCss, fonts.css),
         `${scene.id} emitted`,
-      ),
+      );
+    const comparison = compareObservations(source.observations, emitted.observations);
+    assert.equal(comparison.identity.status, "pass", `${scene.id}: ${comparison.identity.details.join("\n")}`);
+    assert.equal(
+      comparison.computed_style.status,
+      "pass",
+      `${scene.id}: ${comparison.computed_style.details.join("\n")}`,
+    );
+    assert.equal(comparison.geometry.status, "pass", `${scene.id}: ${comparison.geometry.details.join("\n")}`);
+
+    captures.push({
+      scene_id: scene.id,
+      source,
+      emitted,
+      comparison,
     });
   }
   await context.close();

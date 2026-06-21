@@ -1,3 +1,7 @@
+body {
+  margin: 0;
+}
+
 .n0 {
   position: absolute;
   box-sizing: border-box;
@@ -100,6 +104,7 @@
 
 .n12 {
   appearance: none;
+  padding: 0;
   position: absolute;
   display: inline-flex;
   box-sizing: border-box;
@@ -122,6 +127,8 @@
 
 .n14 {
   appearance: none;
+  border: 0;
+  padding: 0;
   position: absolute;
   display: inline-flex;
   box-sizing: border-box;

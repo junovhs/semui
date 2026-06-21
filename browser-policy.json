@@ -14,5 +14,41 @@
   "animation_policy": "disabled_by_injected_css",
   "network_policy": "all_requests_aborted",
   "font_package": "@fontsource/inter@5.2.8",
-  "font_weights": [400, 500, 600, 700]
+  "font_weights": [400, 500, 600, 700],
+  "exact_computed_styles": [
+    "position",
+    "display",
+    "box-sizing",
+    "flex-direction",
+    "align-items",
+    "justify-content",
+    "align-self",
+    "cursor",
+    "font-family",
+    "font-weight",
+    "background-color",
+    "border-color",
+    "color"
+  ],
+  "numeric_computed_styles": [
+    "top",
+    "left",
+    "width",
+    "height",
+    "min-width",
+    "margin-top",
+    "margin-right",
+    "margin-bottom",
+    "margin-left",
+    "padding-top",
+    "padding-right",
+    "padding-bottom",
+    "padding-left",
+    "gap",
+    "border-top-width",
+    "border-radius",
+    "font-size",
+    "line-height"
+  ],
+  "numeric_tolerance_px": 1
 }
