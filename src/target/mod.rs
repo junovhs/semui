@@ -27,6 +27,8 @@ use crate::ir::{
     ControlKind, Display, IrNode, Layout, NodeKind, Paint, Position, SceneIr, Typography,
 };
 
+pub mod gpu;
+
 #[cfg(test)]
 mod tests;
 
