@@ -34,21 +34,21 @@ Implemented:
 - Scene IR extraction and JSON serialization
 - canonical HTML/CSS emission
 - internal IR round-trip regression tests
-- diagnostics for some unsupported input
+- diagnostics for unsupported input, with an executable coverage matrix
+- a deterministic browser proof: computed-style, geometry, and scene-cropped
+  visual diffs over the canonical corpus, reproduced in CI
+- a reproducible release evidence bundle reporting every gate per scene
 
 Not yet implemented:
 
-- browser-backed computed-style or geometry verification
-- screenshot comparison
-- trustworthy release proof
-- general CSS layout
+- general CSS layout beyond the declared subset
 - responsive behavior or JavaScript
 - component, variant, state, or interaction inference
 - non-HTML runtime emitters
 
-The internal round trip is useful for regression testing, but it is not an
-external fidelity oracle. Release-level fidelity requires deterministic browser
-observations.
+The internal round trip is a fast regression layer, not the fidelity oracle.
+Release-level fidelity is judged from the deterministic browser observations
+above; the v0.1 corpus passes all six gates today.
 
 ## Repository layout
 
