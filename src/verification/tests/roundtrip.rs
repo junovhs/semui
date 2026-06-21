@@ -7,6 +7,7 @@ use serde_json::{Value, json};
 use super::super::compare_ir;
 use crate::ir::SceneIr;
 use crate::load_scene_source_graph;
+use crate::verification::VerificationResult;
 use crate::verification::verify_round_trip;
 
 fn repo_root() -> PathBuf {
@@ -34,7 +35,12 @@ fn assert_field_drift(
         .unwrap_or_else(|| panic!("missing object at {object_pointer}"))
         .insert(field.to_owned(), replacement);
     let changed: SceneIr = serde_json::from_value(changed).expect("mutation must remain valid IR");
-    let drift = compare_ir(baseline, &changed);
+    let comparison = compare_ir(baseline, &changed);
+    let drift: Vec<_> = comparison
+        .structural_drift
+        .iter()
+        .chain(&comparison.semantic_ir_drift)
+        .collect();
 
     assert_eq!(
         drift.len(),
@@ -48,6 +54,21 @@ fn assert_field_drift(
     );
 }
 
+fn assert_internal_gates_pass(scene_id: &str, result: &VerificationResult) {
+    let drift = result
+        .structural
+        .drift
+        .iter()
+        .chain(&result.semantic_ir.drift)
+        .map(|d| format!("  - {}", d.message))
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert!(
+        result.structural.pass && result.semantic_ir.pass,
+        "{scene_id} internal gates failed:\n{drift}"
+    );
+}
+
 // ---------------------------------------------------------------------------
 // Per-fixture round-trip assertions
 // ---------------------------------------------------------------------------
@@ -57,16 +78,7 @@ fn profile_card_absolute_round_trip_passes() -> Result<(), Box<dyn std::error::E
     let graph = load_scene_source_graph(repo_root(), "profile_card_absolute")?;
     let result = verify_round_trip(&graph)?;
 
-    assert!(
-        result.pass,
-        "profile_card_absolute round-trip failed:\n{}",
-        result
-            .drift
-            .iter()
-            .map(|d| format!("  - {}", d.message))
-            .collect::<Vec<_>>()
-            .join("\n")
-    );
+    assert_internal_gates_pass("profile_card_absolute", &result);
     Ok(())
 }
 
@@ -75,16 +87,7 @@ fn stacked_info_card_round_trip_passes() -> Result<(), Box<dyn std::error::Error
     let graph = load_scene_source_graph(repo_root(), "stacked_info_card")?;
     let result = verify_round_trip(&graph)?;
 
-    assert!(
-        result.pass,
-        "stacked_info_card round-trip failed:\n{}",
-        result
-            .drift
-            .iter()
-            .map(|d| format!("  - {}", d.message))
-            .collect::<Vec<_>>()
-            .join("\n")
-    );
+    assert_internal_gates_pass("stacked_info_card", &result);
     Ok(())
 }
 
@@ -93,16 +96,7 @@ fn action_row_variants_round_trip_passes() -> Result<(), Box<dyn std::error::Err
     let graph = load_scene_source_graph(repo_root(), "action_row_variants")?;
     let result = verify_round_trip(&graph)?;
 
-    assert!(
-        result.pass,
-        "action_row_variants round-trip failed:\n{}",
-        result
-            .drift
-            .iter()
-            .map(|d| format!("  - {}", d.message))
-            .collect::<Vec<_>>()
-            .join("\n")
-    );
+    assert_internal_gates_pass("action_row_variants", &result);
     Ok(())
 }
 
@@ -111,16 +105,7 @@ fn nested_panel_inset_round_trip_passes() -> Result<(), Box<dyn std::error::Erro
     let graph = load_scene_source_graph(repo_root(), "nested_panel_inset")?;
     let result = verify_round_trip(&graph)?;
 
-    assert!(
-        result.pass,
-        "nested_panel_inset round-trip failed:\n{}",
-        result
-            .drift
-            .iter()
-            .map(|d| format!("  - {}", d.message))
-            .collect::<Vec<_>>()
-            .join("\n")
-    );
+    assert_internal_gates_pass("nested_panel_inset", &result);
     Ok(())
 }
 
@@ -129,16 +114,7 @@ fn typography_specimen_round_trip_passes() -> Result<(), Box<dyn std::error::Err
     let graph = load_scene_source_graph(repo_root(), "typography_specimen")?;
     let result = verify_round_trip(&graph)?;
 
-    assert!(
-        result.pass,
-        "typography_specimen round-trip failed:\n{}",
-        result
-            .drift
-            .iter()
-            .map(|d| format!("  - {}", d.message))
-            .collect::<Vec<_>>()
-            .join("\n")
-    );
+    assert_internal_gates_pass("typography_specimen", &result);
     Ok(())
 }
 
@@ -391,7 +367,9 @@ fn semantic_comparison_excludes_source_provenance() -> Result<(), Box<dyn std::e
     changed["nodes"][0]["source"]["doc_id"] = json!(99);
     let changed: SceneIr = serde_json::from_value(changed)?;
 
-    assert!(compare_ir(&baseline, &changed).is_empty());
+    let comparison = compare_ir(&baseline, &changed);
+    assert!(comparison.structural_drift.is_empty());
+    assert!(comparison.semantic_ir_drift.is_empty());
     Ok(())
 }
 
@@ -401,8 +379,33 @@ fn semantic_comparison_reports_node_count_drift() -> Result<(), Box<dyn std::err
     let mut changed = baseline.clone();
     changed.nodes.pop();
 
-    let drift = compare_ir(&baseline, &changed);
-    assert_eq!(drift.len(), 1);
-    assert!(drift[0].message.starts_with("node count:"));
+    let comparison = compare_ir(&baseline, &changed);
+    assert_eq!(comparison.structural_drift.len(), 1);
+    assert!(comparison.semantic_ir_drift.is_empty());
+    assert!(
+        comparison.structural_drift[0]
+            .message
+            .starts_with("node count:")
+    );
+    Ok(())
+}
+
+#[test]
+fn comparison_partitions_structural_and_semantic_drift() -> Result<(), Box<dyn std::error::Error>> {
+    let baseline = profile_card_ir()?;
+
+    let mut structural_json = serde_json::to_value(&baseline)?;
+    structural_json["nodes"][1]["parent_id"] = json!("changed-parent");
+    let structural: SceneIr = serde_json::from_value(structural_json)?;
+    let comparison = compare_ir(&baseline, &structural);
+    assert_eq!(comparison.structural_drift.len(), 1);
+    assert!(comparison.semantic_ir_drift.is_empty());
+
+    let mut semantic_json = serde_json::to_value(&baseline)?;
+    semantic_json["nodes"][0]["layout"]["width"] = json!(999.0);
+    let semantic: SceneIr = serde_json::from_value(semantic_json)?;
+    let comparison = compare_ir(&baseline, &semantic);
+    assert!(comparison.structural_drift.is_empty());
+    assert_eq!(comparison.semantic_ir_drift.len(), 1);
     Ok(())
 }

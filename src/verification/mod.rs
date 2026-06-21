@@ -34,12 +34,19 @@ pub struct Drift {
     pub message: String,
 }
 
+/// Evidence for one internal round-trip gate.
+#[derive(Debug, Clone)]
+pub struct VerificationGateResult {
+    pub pass: bool,
+    pub drift: Vec<Drift>,
+}
+
 /// The result of running a full round-trip on one scene.
 #[derive(Debug, Clone)]
 pub struct VerificationResult {
     pub scene_id: String,
-    pub pass: bool,
-    pub drift: Vec<Drift>,
+    pub structural: VerificationGateResult,
+    pub semantic_ir: VerificationGateResult,
     pub pass1_node_count: usize,
     pub pass2_node_count: usize,
 }
@@ -67,13 +74,18 @@ pub fn verify_round_trip(
     let laid_out2 = compute_layout(&resolved2);
     let ir2 = extract_ir(&laid_out2, &graph2)?;
 
-    let drift = compare_ir(&ir1, &ir2);
-    let pass = drift.is_empty();
+    let comparison = compare_ir(&ir1, &ir2);
 
     Ok(VerificationResult {
         scene_id: graph.scene_id.clone(),
-        pass,
-        drift,
+        structural: VerificationGateResult {
+            pass: comparison.structural_drift.is_empty(),
+            drift: comparison.structural_drift,
+        },
+        semantic_ir: VerificationGateResult {
+            pass: comparison.semantic_ir_drift.is_empty(),
+            drift: comparison.semantic_ir_drift,
+        },
         pass1_node_count: ir1.nodes.len(),
         pass2_node_count: ir2.nodes.len(),
     })
@@ -83,26 +95,45 @@ pub fn verify_round_trip(
 // IR comparison
 // ---------------------------------------------------------------------------
 
-fn compare_ir(ir1: &SceneIr, ir2: &SceneIr) -> Vec<Drift> {
-    let mut drift: Vec<Drift> = Vec::new();
+#[derive(Debug)]
+struct IrComparison {
+    structural_drift: Vec<Drift>,
+    semantic_ir_drift: Vec<Drift>,
+}
+
+fn compare_ir(ir1: &SceneIr, ir2: &SceneIr) -> IrComparison {
+    let mut comparison = IrComparison {
+        structural_drift: Vec::new(),
+        semantic_ir_drift: Vec::new(),
+    };
 
     compare_value(
         &ir1.schema_version,
         &ir2.schema_version,
         "scene.schema_version",
-        &mut drift,
+        &mut comparison.semantic_ir_drift,
     );
-    compare_value(&ir1.scene_id, &ir2.scene_id, "scene.scene_id", &mut drift);
-    compare_value(&ir1.corpus, &ir2.corpus, "scene.corpus", &mut drift);
+    compare_value(
+        &ir1.scene_id,
+        &ir2.scene_id,
+        "scene.scene_id",
+        &mut comparison.structural_drift,
+    );
+    compare_value(
+        &ir1.corpus,
+        &ir2.corpus,
+        "scene.corpus",
+        &mut comparison.semantic_ir_drift,
+    );
     compare_value(
         &ir1.execution_mode,
         &ir2.execution_mode,
         "scene.execution_mode",
-        &mut drift,
+        &mut comparison.semantic_ir_drift,
     );
 
     if ir1.nodes.len() != ir2.nodes.len() {
-        drift.push(Drift {
+        comparison.structural_drift.push(Drift {
             message: format!(
                 "node count: pass1={} pass2={}",
                 ir1.nodes.len(),
@@ -112,131 +143,146 @@ fn compare_ir(ir1: &SceneIr, ir2: &SceneIr) -> Vec<Drift> {
     }
 
     for (idx, (n1, n2)) in ir1.nodes.iter().zip(ir2.nodes.iter()).enumerate() {
-        compare_node(n1, n2, idx, &mut drift);
+        compare_node(n1, n2, idx, &mut comparison);
     }
 
-    drift
+    comparison
 }
 
-fn compare_node(n1: &IrNode, n2: &IrNode, idx: usize, drift: &mut Vec<Drift>) {
+fn compare_node(n1: &IrNode, n2: &IrNode, idx: usize, comparison: &mut IrComparison) {
     let node = format!("node[{idx}]");
-    macro_rules! field {
+    macro_rules! structural {
         ($path:literal, $left:expr, $right:expr) => {
-            compare_value(&$left, &$right, &format!("{node}.{}", $path), drift)
+            compare_value(
+                &$left,
+                &$right,
+                &format!("{node}.{}", $path),
+                &mut comparison.structural_drift,
+            )
+        };
+    }
+    macro_rules! semantic {
+        ($path:literal, $left:expr, $right:expr) => {
+            compare_value(
+                &$left,
+                &$right,
+                &format!("{node}.{}", $path),
+                &mut comparison.semantic_ir_drift,
+            )
         };
     }
 
-    field!("id", n1.id, n2.id);
-    field!("kind", n1.kind, n2.kind);
-    field!("parent_id", n1.parent_id, n2.parent_id);
-    field!("control_kind", n1.control_kind, n2.control_kind);
-    field!("text_content", n1.text_content, n2.text_content);
+    structural!("id", n1.id, n2.id);
+    structural!("kind", n1.kind, n2.kind);
+    structural!("parent_id", n1.parent_id, n2.parent_id);
+    structural!("control_kind", n1.control_kind, n2.control_kind);
+    structural!("text_content", n1.text_content, n2.text_content);
 
     // Layout
-    field!("layout.position", n1.layout.position, n2.layout.position);
-    field!("layout.display", n1.layout.display, n2.layout.display);
-    field!(
+    semantic!("layout.position", n1.layout.position, n2.layout.position);
+    semantic!("layout.display", n1.layout.display, n2.layout.display);
+    semantic!(
         "layout.box_sizing",
         n1.layout.box_sizing,
         n2.layout.box_sizing
     );
-    field!("layout.top", n1.layout.top, n2.layout.top);
-    field!("layout.left", n1.layout.left, n2.layout.left);
-    field!("layout.width", n1.layout.width, n2.layout.width);
-    field!("layout.height", n1.layout.height, n2.layout.height);
-    field!("layout.min_width", n1.layout.min_width, n2.layout.min_width);
-    field!(
+    semantic!("layout.top", n1.layout.top, n2.layout.top);
+    semantic!("layout.left", n1.layout.left, n2.layout.left);
+    semantic!("layout.width", n1.layout.width, n2.layout.width);
+    semantic!("layout.height", n1.layout.height, n2.layout.height);
+    semantic!("layout.min_width", n1.layout.min_width, n2.layout.min_width);
+    semantic!(
         "layout.margin.top",
         n1.layout.margin.top,
         n2.layout.margin.top
     );
-    field!(
+    semantic!(
         "layout.margin.right",
         n1.layout.margin.right,
         n2.layout.margin.right
     );
-    field!(
+    semantic!(
         "layout.margin.bottom",
         n1.layout.margin.bottom,
         n2.layout.margin.bottom
     );
-    field!(
+    semantic!(
         "layout.margin.left",
         n1.layout.margin.left,
         n2.layout.margin.left
     );
-    field!(
+    semantic!(
         "layout.padding.top",
         n1.layout.padding.top,
         n2.layout.padding.top
     );
-    field!(
+    semantic!(
         "layout.padding.right",
         n1.layout.padding.right,
         n2.layout.padding.right
     );
-    field!(
+    semantic!(
         "layout.padding.bottom",
         n1.layout.padding.bottom,
         n2.layout.padding.bottom
     );
-    field!(
+    semantic!(
         "layout.padding.left",
         n1.layout.padding.left,
         n2.layout.padding.left
     );
-    field!(
+    semantic!(
         "layout.flex_direction",
         n1.layout.flex_direction,
         n2.layout.flex_direction
     );
-    field!(
+    semantic!(
         "layout.align_items",
         n1.layout.align_items,
         n2.layout.align_items
     );
-    field!(
+    semantic!(
         "layout.justify_content",
         n1.layout.justify_content,
         n2.layout.justify_content
     );
-    field!(
+    semantic!(
         "layout.align_self",
         n1.layout.align_self,
         n2.layout.align_self
     );
-    field!("layout.gap", n1.layout.gap, n2.layout.gap);
+    semantic!("layout.gap", n1.layout.gap, n2.layout.gap);
 
     // Paint
-    field!(
+    semantic!(
         "paint.background_color",
         n1.paint.background_color,
         n2.paint.background_color
     );
     match (&n1.paint.border, &n2.paint.border) {
         (Some(b1), Some(b2)) => {
-            field!("paint.border.width", b1.width, b2.width);
-            field!("paint.border.color", b1.color, b2.color);
+            semantic!("paint.border.width", b1.width, b2.width);
+            semantic!("paint.border.color", b1.color, b2.color);
         }
-        _ => field!("paint.border", n1.paint.border, n2.paint.border),
+        _ => semantic!("paint.border", n1.paint.border, n2.paint.border),
     }
-    field!(
+    semantic!(
         "paint.border_radius",
         n1.paint.border_radius,
         n2.paint.border_radius
     );
-    field!("paint.cursor", n1.paint.cursor, n2.paint.cursor);
+    semantic!("paint.cursor", n1.paint.cursor, n2.paint.cursor);
 
     // Typography
     match (&n1.typography, &n2.typography) {
         (Some(t1), Some(t2)) => {
-            field!("typography.font_family", t1.font_family, t2.font_family);
-            field!("typography.font_size", t1.font_size, t2.font_size);
-            field!("typography.font_weight", t1.font_weight, t2.font_weight);
-            field!("typography.line_height", t1.line_height, t2.line_height);
-            field!("typography.color", t1.color, t2.color);
+            semantic!("typography.font_family", t1.font_family, t2.font_family);
+            semantic!("typography.font_size", t1.font_size, t2.font_size);
+            semantic!("typography.font_weight", t1.font_weight, t2.font_weight);
+            semantic!("typography.line_height", t1.line_height, t2.line_height);
+            semantic!("typography.color", t1.color, t2.color);
         }
-        _ => field!("typography", n1.typography, n2.typography),
+        _ => semantic!("typography", n1.typography, n2.typography),
     }
 
     // `source` is deliberately excluded: it records parser provenance and is

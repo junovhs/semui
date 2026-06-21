@@ -9,6 +9,8 @@ mod tests;
 
 use std::path::Path;
 
+use serde::Serialize;
+
 use crate::diagnostics::{Diagnostic, DiagnosticKind, analyze};
 use crate::emitter::{EmittedScene, emit};
 use crate::extractor::extract_ir;
@@ -22,6 +24,69 @@ use crate::verification::verify_round_trip;
 // Public types
 // ---------------------------------------------------------------------------
 
+/// Outcome of one independently evaluated fidelity gate.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum GateStatus {
+    Pass,
+    Fail,
+    Unavailable,
+}
+
+/// Machine-readable evidence for one fidelity gate.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct GateEvidence {
+    pub status: GateStatus,
+    pub details: Vec<String>,
+}
+
+impl GateEvidence {
+    fn pass() -> Self {
+        Self {
+            status: GateStatus::Pass,
+            details: Vec::new(),
+        }
+    }
+
+    fn fail(details: Vec<String>) -> Self {
+        Self {
+            status: GateStatus::Fail,
+            details,
+        }
+    }
+
+    fn unavailable(reason: &str) -> Self {
+        Self {
+            status: GateStatus::Unavailable,
+            details: vec![reason.to_owned()],
+        }
+    }
+}
+
+/// The six independent gates required by the v0.1 evidence contract.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct SceneGates {
+    pub structural: GateEvidence,
+    pub semantic_ir: GateEvidence,
+    pub diagnostics: GateEvidence,
+    pub computed_style: GateEvidence,
+    pub geometry: GateEvidence,
+    pub visual: GateEvidence,
+}
+
+impl SceneGates {
+    fn statuses(&self) -> [GateStatus; 6] {
+        [
+            self.structural.status,
+            self.semantic_ir.status,
+            self.diagnostics.status,
+            self.computed_style.status,
+            self.geometry.status,
+            self.visual.status,
+        ]
+    }
+}
+
 /// Per-scene proof evidence.
 #[derive(Debug, Clone)]
 pub struct SceneProof {
@@ -30,10 +95,14 @@ pub struct SceneProof {
     pub ir_node_count: usize,
     /// Number of diagnostics produced by the static analyzer.
     pub diagnostic_count: usize,
-    /// Whether the HTML/CSS → IR → HTML/CSS round-trip was lossless.
-    pub round_trip_pass: bool,
-    /// Drift messages when `round_trip_pass` is false.
-    pub drift: Vec<String>,
+    pub gates: SceneGates,
+}
+
+impl SceneProof {
+    /// Aggregate status without collapsing unavailable evidence into success.
+    pub fn status(&self) -> GateStatus {
+        aggregate_status(self.gates.statuses())
+    }
 }
 
 /// Aggregate proof for the entire v0.1 corpus.
@@ -44,14 +113,67 @@ pub struct CorpusProof {
 }
 
 impl CorpusProof {
-    /// `true` when every scene passes its round-trip check.
-    pub fn all_pass(&self) -> bool {
-        self.scenes.iter().all(|s| s.round_trip_pass)
+    /// Aggregate corpus status. Missing browser evidence is `Unavailable`,
+    /// never a pass.
+    pub fn status(&self) -> GateStatus {
+        aggregate_status(self.scenes.iter().map(SceneProof::status))
     }
 
     /// Total IR nodes across all scenes.
     pub fn total_ir_nodes(&self) -> usize {
         self.scenes.iter().map(|s| s.ir_node_count).sum()
+    }
+
+    /// Serialize deterministic machine-readable evidence.
+    pub fn to_json(&self) -> Result<String, serde_json::Error> {
+        let evidence = CorpusEvidence {
+            corpus: &self.corpus,
+            status: self.status(),
+            scenes: self
+                .scenes
+                .iter()
+                .map(|scene| SceneEvidence {
+                    scene_id: &scene.scene_id,
+                    status: scene.status(),
+                    ir_node_count: scene.ir_node_count,
+                    diagnostic_count: scene.diagnostic_count,
+                    gates: &scene.gates,
+                })
+                .collect(),
+        };
+        serde_json::to_string_pretty(&evidence)
+    }
+}
+
+#[derive(Serialize)]
+struct CorpusEvidence<'a> {
+    corpus: &'a str,
+    status: GateStatus,
+    scenes: Vec<SceneEvidence<'a>>,
+}
+
+#[derive(Serialize)]
+struct SceneEvidence<'a> {
+    scene_id: &'a str,
+    status: GateStatus,
+    ir_node_count: usize,
+    diagnostic_count: usize,
+    gates: &'a SceneGates,
+}
+
+fn aggregate_status(statuses: impl IntoIterator<Item = GateStatus>) -> GateStatus {
+    let mut unavailable = false;
+    for status in statuses {
+        match status {
+            GateStatus::Fail => return GateStatus::Fail,
+            GateStatus::Unavailable => unavailable = true,
+            GateStatus::Pass => {}
+        }
+    }
+    if unavailable {
+        GateStatus::Unavailable
+    } else {
+        GateStatus::Pass
     }
 }
 
@@ -89,18 +211,55 @@ pub fn run_corpus_proof(
             .join("expected")
             .join("diagnostics.txt");
         let expected_diagnostics = std::fs::read_to_string(&expected_diagnostics_path)?;
-        validate_diagnostic_expectations(&scene_id, &diagnostics, &expected_diagnostics)
-            .map_err(|message| std::io::Error::new(std::io::ErrorKind::InvalidData, message))?;
+        let diagnostics_gate = match validate_diagnostic_expectations(
+            &scene_id,
+            &diagnostics,
+            &expected_diagnostics,
+        ) {
+            Ok(()) => GateEvidence::pass(),
+            Err(message) => GateEvidence::fail(vec![message]),
+        };
         let diagnostic_count = diagnostics.len();
 
         let vr = verify_round_trip(&graph)?;
+
+        let structural = if vr.structural.pass {
+            GateEvidence::pass()
+        } else {
+            GateEvidence::fail(
+                vr.structural
+                    .drift
+                    .iter()
+                    .map(|drift| drift.message.clone())
+                    .collect(),
+            )
+        };
+        let semantic_ir = if vr.semantic_ir.pass {
+            GateEvidence::pass()
+        } else {
+            GateEvidence::fail(
+                vr.semantic_ir
+                    .drift
+                    .iter()
+                    .map(|drift| drift.message.clone())
+                    .collect(),
+            )
+        };
 
         scenes.push(SceneProof {
             scene_id,
             ir_node_count: ir.nodes.len(),
             diagnostic_count,
-            round_trip_pass: vr.pass,
-            drift: vr.drift.iter().map(|d| d.message.clone()).collect(),
+            gates: SceneGates {
+                structural,
+                semantic_ir,
+                diagnostics: diagnostics_gate,
+                computed_style: GateEvidence::unavailable(
+                    "browser computed-style evidence is not implemented",
+                ),
+                geometry: GateEvidence::unavailable("browser geometry evidence is not implemented"),
+                visual: GateEvidence::unavailable("browser pixel evidence is not implemented"),
+            },
         });
     }
 

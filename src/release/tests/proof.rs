@@ -4,7 +4,10 @@ use std::path::PathBuf;
 
 use crate::diagnostics::{Diagnostic, DiagnosticKind};
 use crate::ir::SceneIr;
-use crate::release::{build_golden_artifacts, run_corpus_proof, write_golden_artifacts};
+use crate::release::{
+    GateEvidence, GateStatus, SceneGates, SceneProof, build_golden_artifacts, run_corpus_proof,
+    write_golden_artifacts,
+};
 
 use super::super::validate_diagnostic_expectations;
 
@@ -31,26 +34,84 @@ const SCENE_IDS: [&str; 6] = [
 // Corpus-wide acceptance gate
 // ---------------------------------------------------------------------------
 
-/// Every scene in the v0.1 manifest must pass its round-trip with zero drift.
+/// Every scene in the v0.1 manifest must pass the implemented internal gates.
 #[test]
-fn all_v01_scenes_pass_round_trip() -> Result<(), Box<dyn std::error::Error>> {
+fn all_v01_scenes_pass_internal_gates() -> Result<(), Box<dyn std::error::Error>> {
     let proof = run_corpus_proof(repo_root())?;
 
-    let failures: Vec<_> = proof.scenes.iter().filter(|s| !s.round_trip_pass).collect();
+    let failures: Vec<_> = proof
+        .scenes
+        .iter()
+        .filter(|scene| {
+            scene.gates.structural.status != GateStatus::Pass
+                || scene.gates.semantic_ir.status != GateStatus::Pass
+                || scene.gates.diagnostics.status != GateStatus::Pass
+        })
+        .collect();
 
     assert!(
         failures.is_empty(),
-        "round-trip failed for {} scene(s):\n{}",
+        "internal gates failed for {} scene(s): {failures:#?}",
         failures.len(),
-        failures
-            .iter()
-            .flat_map(|s| {
-                let id = &s.scene_id;
-                s.drift.iter().map(move |d| format!("  [{id}] {d}"))
-            })
-            .collect::<Vec<_>>()
-            .join("\n")
     );
+    Ok(())
+}
+
+#[test]
+fn corpus_status_is_unavailable_until_browser_gates_exist() -> Result<(), Box<dyn std::error::Error>>
+{
+    let proof = run_corpus_proof(repo_root())?;
+    assert_eq!(proof.status(), GateStatus::Unavailable);
+    for scene in &proof.scenes {
+        assert_eq!(scene.gates.computed_style.status, GateStatus::Unavailable);
+        assert_eq!(scene.gates.geometry.status, GateStatus::Unavailable);
+        assert_eq!(scene.gates.visual.status, GateStatus::Unavailable);
+        assert_eq!(scene.status(), GateStatus::Unavailable);
+    }
+    Ok(())
+}
+
+#[test]
+fn failing_gate_takes_precedence_over_unavailable_evidence() {
+    let scene = SceneProof {
+        scene_id: "test".to_owned(),
+        ir_node_count: 1,
+        diagnostic_count: 0,
+        gates: SceneGates {
+            structural: GateEvidence::pass(),
+            semantic_ir: GateEvidence::pass(),
+            diagnostics: GateEvidence::pass(),
+            computed_style: GateEvidence::unavailable("not captured"),
+            geometry: GateEvidence::unavailable("not captured"),
+            visual: GateEvidence::fail(vec!["pixel drift".to_owned()]),
+        },
+    };
+
+    assert_eq!(scene.status(), GateStatus::Fail);
+}
+
+#[test]
+fn corpus_evidence_json_is_deterministic_and_names_every_gate()
+-> Result<(), Box<dyn std::error::Error>> {
+    let proof = run_corpus_proof(repo_root())?;
+    let first = proof.to_json()?;
+    let second = proof.to_json()?;
+    assert_eq!(first, second);
+
+    let value: serde_json::Value = serde_json::from_str(&first)?;
+    assert_eq!(value["status"], "unavailable");
+    assert_eq!(value["scenes"][0]["status"], "unavailable");
+    let gates = &value["scenes"][0]["gates"];
+    for name in [
+        "structural",
+        "semantic_ir",
+        "diagnostics",
+        "computed_style",
+        "geometry",
+        "visual",
+    ] {
+        assert!(gates.get(name).is_some(), "missing gate {name}: {gates}");
+    }
     Ok(())
 }
 
