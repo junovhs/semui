@@ -1,0 +1,13 @@
+{
+  "name": "semui-browser-proof",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node tools/browser-harness.mjs",
+    "test:browser": "node tools/browser-harness.mjs"
+  },
+  "devDependencies": {
+    "@fontsource/inter": "5.2.8",
+    "playwright": "1.61.0"
+  }
+}

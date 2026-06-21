@@ -2,6 +2,8 @@
 **/.ishoo/cache/
 **/.ishoo/worktrees/
 /target
+/node_modules
+/browser-proof
 .ishoo/
 
 # semmap artifacts (regenerable, not committed - DEC-10)

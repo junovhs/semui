@@ -1,0 +1,18 @@
+{
+  "playwright_version": "1.61.0",
+  "browser": "chromium",
+  "browser_version": "149.0.7827.55",
+  "viewport": {
+    "width": 800,
+    "height": 600
+  },
+  "device_scale_factor": 1,
+  "locale": "en-US",
+  "timezone": "UTC",
+  "color_scheme": "light",
+  "reduced_motion": "reduce",
+  "animation_policy": "disabled_by_injected_css",
+  "network_policy": "all_requests_aborted",
+  "font_package": "@fontsource/inter@5.2.8",
+  "font_weights": [400, 500, 600, 700]
+}

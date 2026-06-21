@@ -1,0 +1,24 @@
+name: Browser proof
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  browser-proof:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.17.1
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm test -- --output "${{ runner.temp }}/browser-evidence.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: browser-evidence
+          path: ${{ runner.temp }}/browser-evidence.json
+      - run: cargo build && cargo test
